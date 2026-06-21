@@ -1,3 +1,5 @@
+import { isAdmin } from '@/lib/auth'
+import { redirect } from 'next/navigation'
 import React from 'react'
 
 export const metadata = {
@@ -5,7 +7,9 @@ export const metadata = {
   description: "Explore Dashboard - Admin page on Ecom, the fastest, secure, and trusted e-commerce platform.",
 }
 
-export default function DashboardAdminLayout({ children }) {
+export default async function DashboardAdminLayout({ children }) {
+  const auth=await isAdmin()
+    if(!auth.success) redirect('/dashboard')
   return (
     <>
       {children}

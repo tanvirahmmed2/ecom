@@ -96,3 +96,12 @@ export const isSales = async () => {
   }
   return { success: true, user: auth.user };
 };
+
+export const isManagementRole = async () => {
+  const auth = await authenticateUser();
+  if (!auth.success) return auth;
+  if (auth.user.role !== 'manager' && auth.user.role !== 'admin') {
+    return { success: false, message: 'Access denied: Management role required' };
+  }
+  return { success: true, user: auth.user };
+};

@@ -39,6 +39,8 @@ const ContextProvider = ({ children }) => {
 
     const [cartBar, setCartBar]=useState(false)
     const [menuBar, setMenuBar]=useState(false)
+    const [userSidebar, setUserSidebar]=useState(false)
+    const [dashSidebar, setDashSidebar]=useState(false)
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -68,7 +70,7 @@ const ContextProvider = ({ children }) => {
 
     const contextValue = {
         categories,
-        cartBar, setCartBar,menuBar, setMenuBar,
+        cartBar, setCartBar,menuBar, setMenuBar,userSidebar, setUserSidebar,dashSidebar, setDashSidebar,
         user, setUser, loading, logout
 
     }

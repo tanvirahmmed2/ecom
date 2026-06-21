@@ -1,11 +1,14 @@
 'use client'
 import Link from 'next/link'
 import React, { useState, useContext } from 'react'
+import { useRouter } from 'next/navigation'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import { Context } from '../helper/Context'
+import { FiLock, FiMail } from 'react-icons/fi'
 
 const LoginForm = () => {
+    const router = useRouter()
     const { setUser } = useContext(Context)
     const [submitting, setSubmitting] = useState(false)
     const [formData, setFormData] = useState({
@@ -33,7 +36,8 @@ const LoginForm = () => {
                 setUser(response.data.user)
             }
 
-            window.location.replace('/')
+            router.push('/')
+            router.refresh()
         } catch (error) {
             const errorMessage = error.response?.data?.error || 'Failed to login. Please try again.'
             toast.error(errorMessage, { id: toastId })
@@ -43,12 +47,20 @@ const LoginForm = () => {
     }
 
     return (
-        <div className='w-full flex flex-col items-center justify-center min-h-screen'>
-            <form onSubmit={handleSubmit} className='w-auto min-w-96 flex flex-col items-center justify-center gap-3 shadow-md border border-black/10 p-8 rounded-2xl bg-white'>
-                <h2 className='text-2xl font-bold text-slate-800 mb-2'>Account Login</h2>
+        <div className='w-full flex flex-col items-center justify-center min-h-screen p-4'>
+            <form onSubmit={handleSubmit} className='w-full max-w-md flex flex-col gap-4 shadow-md border border-slate-100 p-8 rounded-3xl bg-white'>
+                <div className='flex flex-col items-center text-center mb-2'>
+                    <div className='p-3 bg-red-50 rounded-2xl text-red-500 mb-3 shadow-sm'>
+                        <FiLock className="w-6 h-6" />
+                    </div>
+                    <h2 className='text-2xl font-extrabold text-slate-800 tracking-tight'>Welcome Back</h2>
+                    <p className='text-sm text-slate-500 mt-1 font-medium'>Access your secure Ecom dashboard</p>
+                </div>
                 
-                <div className='w-full flex flex-col gap-2'>
-                    <label htmlFor="email" className='text-sm font-semibold text-slate-600'>Email</label>
+                <div className='w-full flex flex-col gap-1.5'>
+                    <label htmlFor="email" className='text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5'>
+                        <FiMail className="w-3.5 h-3.5" /> Email Address
+                    </label>
                     <input 
                         type="email" 
                         required 
@@ -56,13 +68,15 @@ const LoginForm = () => {
                         value={formData.email} 
                         name='email' 
                         id='email'  
-                        placeholder='Enter your email'
-                        className='standard-input w-full p-2 border border-slate-300 rounded-lg outline-none focus:border-slate-800' 
+                        placeholder='name@example.com'
+                        className='w-full p-3 border border-slate-200 rounded-xl outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 text-slate-800 transition placeholder-slate-400 bg-slate-50 focus:bg-white text-sm' 
                     />
                 </div>
                 
-                <div className='w-full flex flex-col gap-2'>
-                    <label htmlFor="password" className='text-sm font-semibold text-slate-600'>Password</label>
+                <div className='w-full flex flex-col gap-1.5'>
+                    <label htmlFor="password" className='text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5'>
+                        <FiLock className="w-3.5 h-3.5" /> Password
+                    </label>
                     <input 
                         type="password" 
                         onChange={handleChange} 
@@ -70,22 +84,22 @@ const LoginForm = () => {
                         name='password' 
                         id='password' 
                         required  
-                        placeholder='Enter your password'
-                        className='standard-input w-full p-2 border border-slate-300 rounded-lg outline-none focus:border-slate-800'
+                        placeholder='••••••••'
+                        className='w-full p-3 border border-slate-200 rounded-xl outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 text-slate-800 transition placeholder-slate-400 bg-slate-50 focus:bg-white text-sm'
                     />
                 </div>
                 
-                <div className='w-full flex flex-row items-center justify-between text-sm mt-1'>
-                    <Link href={'/register'} className='text-red-600 hover:underline'>Register account</Link>
-                    <Link href={'/recover-account'} className='text-slate-500 hover:underline'>Recover account?</Link>
+                <div className='w-full flex flex-row items-center justify-between text-xs font-bold mt-1'>
+                    <Link href={'/register'} className='text-red-600 hover:underline'>Register Account</Link>
+                    <Link href={'/recover-account'} className='text-slate-500 hover:underline'>Recover password?</Link>
                 </div>
                 
                 <button 
                     type='submit' 
                     disabled={submitting}
-                    className={`primary-button w-full mt-4 bg-slate-900 hover:bg-slate-800 text-white font-medium py-2 rounded-xl cursor-pointer transition ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`w-full mt-4 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-xl cursor-pointer transition shadow-md shadow-red-600/10 ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                    {submitting ? 'Logging in...' : 'Login'}
+                    {submitting ? 'Authenticating...' : 'Sign In'}
                 </button>
             </form>
         </div>
