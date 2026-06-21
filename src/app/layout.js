@@ -1,5 +1,6 @@
 
 import ContextProvider from "@/component/helper/Context";
+import HotToast from "@/component/helper/HotToast";
 import "./globals.css";
 
 
@@ -16,10 +17,11 @@ export default function RootLayout({ children }) {
     >
       <body className="min-h-full flex flex-col">
         <ContextProvider>
+          <HotToast />
           <main>{children}</main>
-
         </ContextProvider>
       </body>
     </html>
   );
 }
+
