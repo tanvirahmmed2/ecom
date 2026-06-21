@@ -10,8 +10,7 @@ import { MdMenu } from 'react-icons/md';
 const Navbar = () => {
     const [lastScroll, setLastScroll] = useState(0)
     const [showNavbar, setShowNavbar] = useState(true)
-    const {cartBar, setCartBar}=useContext(Context)
-    const {menuBar, setMenuBar}=useContext(Context)
+    const {cartBar, setCartBar, menuBar, setMenuBar, user, loading, logout}=useContext(Context)
 
     const [searchValue, setSearchValue] = useState(null)
 
@@ -50,7 +49,24 @@ const Navbar = () => {
                 <Link href={'/offers'}>Offers</Link>
                 <Link href={'/about'}>About</Link>
                 <button onClick={()=>setCartBar(!cartBar)} className='text-xl text-red-600'><BiCart /></button>
-                <Link href={'/login'} className='text-slate-900 bg-white px-4 rounded-2xl'>Login</Link>
+                {loading ? (
+                    <span className="text-xs text-slate-400">Loading...</span>
+                ) : user ? (
+                    <div className="flex items-center gap-3">
+                        <Link href={'/user'} className="text-sm text-slate-200">Hi, {user.name.split(' ')[0]}</Link>
+                        <button onClick={async () => {
+                            try {
+                                await logout();
+                            } catch (e) {
+                                console.error(e);
+                            }
+                        }} className="text-white cursor-pointer bg-red-600 px-3 py-1 rounded-2xl text-sm font-medium hover:bg-red-700 transition">
+                            Logout
+                        </button>
+                    </div>
+                ) : (
+                    <Link href={'/login'} className='text-slate-900 bg-white px-4 py-1 rounded-2xl font-medium'>Login</Link>
+                )}
             </div>
         </nav>
     )

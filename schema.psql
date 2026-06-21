@@ -1,14 +1,14 @@
 
 CREATE TABLE users (
   user_id SERIAL PRIMARY KEY,
-  tenant_id INT REFERENCES tenants(tenant_id),
-
   name VARCHAR(100) NOT NULL,
   email VARCHAR(150) UNIQUE NOT NULL,
   phone VARCHAR(20),
-
   password TEXT NOT NULL,
-
+  is_varified BOOLEAN DEFAULT FALSE,
+  varification_token TEXT NULL,
+  recover_token TEXT NULL,
+  recover_token_expires TIMESTAMP DEFAULT NULL,
   role TEXT DEFAULT 'user'
     CHECK (role IN ('admin','manager','sales','user')),
   is_active BOOLEAN DEFAULT TRUE,
@@ -21,51 +21,35 @@ CREATE TABLE users (
 -- =====================================================
 CREATE TABLE customers (
   customer_id SERIAL PRIMARY KEY,
-  tenant_id INT REFERENCES tenants(tenant_id),
-
   name VARCHAR(100),
   phone VARCHAR(20) NOT NULL,
   email VARCHAR(100),
   address TEXT,
-
   created_at TIMESTAMP DEFAULT now()
 );
 
--- =====================================================
--- CATEGORIES
--- =====================================================
 CREATE TABLE categories (
   category_id SERIAL PRIMARY KEY,
-  tenant_id INT REFERENCES tenants(tenant_id),
   parent_id INT REFERENCES categories(category_id) ON DELETE CASCADE,
   name VARCHAR(100) NOT NULL,
-  slug VARCAHR(100) NOT NULL,
+  slug VARCHAR(100) NOT NULL,
 image TEXT NOT NULL,
 image_id TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT now()
 );
 
--- =====================================================
--- BRANDS
--- =====================================================
 CREATE TABLE brands (
   brand_id SERIAL PRIMARY KEY,
-  tenant_id INT REFERENCES tenants(tenant_id),
 image TEXT NOT NULL,
 image_id TEXT NOT NULL,
   name VARCHAR(100) NOT NULL,
   description TEXT,
-
   is_active BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMP DEFAULT now()
 );
 
--- =====================================================
--- PRODUCTS
--- =====================================================
 CREATE TABLE products (
   product_id SERIAL PRIMARY KEY,
-  tenant_id INT REFERENCES tenants(tenant_id),
   category_id INT REFERENCES categories(category_id),
   brand_id INT REFERENCES brands(brand_id),
   name VARCHAR(150) NOT NULL,
@@ -81,9 +65,7 @@ CREATE TABLE products (
   image_id VARCHAR(255) NOT NULL,
   unit VARCHAR(50),
   barcode TEXT,
-
   is_active BOOLEAN DEFAULT TRUE,
-
   created_at TIMESTAMP DEFAULT now(),
   updated_at TIMESTAMP DEFAULT now()
 );
@@ -92,7 +74,6 @@ CREATE TABLE products (
 CREATE TABLE product_variants (
   variant_id   SERIAL PRIMARY KEY,
   product_id   INT REFERENCES products(product_id) ON DELETE CASCADE,
-
   variant_name VARCHAR(150) NOT NULL,  -- e.g. "Red - XL", "Blue - M"
   price        NUMERIC(10,2) NOT NULL,
   stock        INT DEFAULT 0
@@ -209,16 +190,9 @@ CREATE TABLE public.payments (
 );
 
 CREATE INDEX idx_payments_order_id ON public.payments(order_id);
-CREATE INDEX idx_payments_tenant_method ON public.payments(tenant_id, payment_method);
+CREATE INDEX idx_payments_payment_method ON public.payments(payment_method);
 
-CREATE TABLE supports (
-  support_id SERIAL PRIMARY KEY,
-  name VARCHAR(100),
-  email VARCHAR(100),
-  subject VARCHAR(200),
-  message TEXT,
-  created_at TIMESTAMP DEFAULT now()
-);
+;
 
 CREATE TABLE inventory_logs (
   log_id SERIAL PRIMARY KEY,
@@ -252,4 +226,42 @@ CREATE TABLE reviews (
   is_approved BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMP DEFAULT now(),
   updated_at TIMESTAMP DEFAULT now()
+);
+
+CREATE TABLE contacts (
+  contact_id SERIAL PRIMARY KEY,
+  name VARCHAR(100),
+  email VARCHAR(100),
+  subject VARCHAR(200),
+  message TEXT,
+  created_at TIMESTAMP DEFAULT now()
+);
+
+CREATE TABLE contact_replies(
+  reply_id SERIAL PRIMARY KEY,
+  contact_id INT REFERENCES contacts(contact_id) ON DELETE CASCADE,
+  user_id INT REFERENCES users(user_id) ON DELETE SET NULL,
+  message TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT now()
+);
+
+CREATE TABLE supports (
+  support_id SERIAL PRIMARY KEY,
+  user_id INT REFERENCES users(user_id) ON DELETE CASCADE,
+  subject VARCHAR(200) NOT NULL,
+  description TEXT,
+  status VARCHAR(30) DEFAULT 'pending'
+    CHECK (status IN ('pending', 'open', 'in_progress', 'resolved', 'closed')),
+  priority VARCHAR(20) DEFAULT 'medium'
+    CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
+  created_at TIMESTAMP DEFAULT now(),
+  updated_at TIMESTAMP DEFAULT now()
+);
+
+CREATE TABLE support_messages(
+  message_id SERIAL PRIMARY KEY,
+  support_id INT REFERENCES supports(support_id) ON DELETE CASCADE,
+  sender_id INT REFERENCES users(user_id) ON DELETE SET NULL,
+  message TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT now()
 );

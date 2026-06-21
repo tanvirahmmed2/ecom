@@ -1,5 +1,6 @@
 'use client'
-import { createContext, useState } from "react";
+import { createContext, useState, useEffect } from "react";
+import axios from "axios";
 
 
 export const Context = createContext()
@@ -32,15 +33,43 @@ const catg = [
 const ContextProvider = ({ children }) => {
 
     const [categories, setCategories] = useState(catg)
+    const [user, setUser] = useState(null)
+    const [loading, setLoading] = useState(true)
     
 
     const [cartBar, setCartBar]=useState(false)
     const [menuBar, setMenuBar]=useState(false)
 
+    useEffect(() => {
+        const fetchUser = async () => {
+            try {
+                const response = await axios.get('/api/user');
+                if (response.data && response.data.user) {
+                    setUser(response.data.user);
+                }
+            } catch (error) {
+                console.error("Failed to fetch user session:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchUser();
+    }, []);
+
+    const logout = async () => {
+        try {
+            await axios.post('/api/user/logout');
+            setUser(null);
+        } catch (error) {
+            console.error("Logout failed:", error);
+            throw error;
+        }
+    };
 
     const contextValue = {
         categories,
-        cartBar, setCartBar,menuBar, setMenuBar
+        cartBar, setCartBar,menuBar, setMenuBar,
+        user, setUser, loading, logout
 
     }
     return (
