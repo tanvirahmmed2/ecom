@@ -41,7 +41,7 @@ export const authenticateUser = async () => {
     }
 
     const result = await query(
-      'SELECT user_id, name, email, phone, role, is_active FROM users WHERE user_id = $1',
+      'SELECT user_id, name, email, phone, role, is_active, is_banned FROM users WHERE user_id = $1',
       [decoded.user_id]
     );
 
@@ -50,6 +50,9 @@ export const authenticateUser = async () => {
     }
 
     const user = result.rows[0];
+    if (user.is_banned) {
+      return { success: false, message: 'User account is banned' };
+    }
     if (!user.is_active) {
       return { success: false, message: 'User account is deactivated' };
     }
@@ -81,7 +84,7 @@ export const isAdmin = async () => {
 export const isManager = async () => {
   const auth = await authenticateUser();
   if (!auth.success) return auth;
-  if (auth.user.role !== 'manager' && auth.user.role !== 'admin') {
+  if (auth.user.role !== 'manager') {
     return { success: false, message: 'Access denied: Manager role required' };
   }
   return { success: true, user: auth.user };
@@ -91,7 +94,7 @@ export const isManager = async () => {
 export const isSales = async () => {
   const auth = await authenticateUser();
   if (!auth.success) return auth;
-  if (auth.user.role !== 'sales' && auth.user.role !== 'admin') {
+  if (auth.user.role !== 'sales') {
     return { success: false, message: 'Access denied: Sales role required' };
   }
   return { success: true, user: auth.user };
@@ -100,7 +103,7 @@ export const isSales = async () => {
 export const isManagementRole = async () => {
   const auth = await authenticateUser();
   if (!auth.success) return auth;
-  if (auth.user.role !== 'manager' && auth.user.role !== 'admin') {
+  if (auth.user.role !== 'manager' && auth.user.role !== 'admin' && auth.user.role!=='sales') {
     return { success: false, message: 'Access denied: Management role required' };
   }
   return { success: true, user: auth.user };

@@ -35,10 +35,11 @@ const ContextProvider = ({ children }) => {
     const [categories, setCategories] = useState(catg)
     const [user, setUser] = useState(null)
     const [loading, setLoading] = useState(true)
+
+    const [cart, setCart]=useState({items:[]})
     
 
-    const [cartBar, setCartBar]=useState(false)
-    const [menuBar, setMenuBar]=useState(false)
+    const [cartbar, setCartbar]=useState(false)
     const [userSidebar, setUserSidebar]=useState(false)
     const [dashSidebar, setDashSidebar]=useState(false)
 
@@ -62,6 +63,7 @@ const ContextProvider = ({ children }) => {
         try {
             await axios.post('/api/user/logout');
             setUser(null);
+            window.location.replace('/login')
         } catch (error) {
             console.error("Logout failed:", error);
             throw error;
@@ -69,8 +71,8 @@ const ContextProvider = ({ children }) => {
     };
 
     const contextValue = {
-        categories,
-        cartBar, setCartBar,menuBar, setMenuBar,userSidebar, setUserSidebar,dashSidebar, setDashSidebar,
+        categories,cart, setCart,
+        cartbar, setCartbar,userSidebar, setUserSidebar,dashSidebar, setDashSidebar,
         user, setUser, loading, logout
 
     }

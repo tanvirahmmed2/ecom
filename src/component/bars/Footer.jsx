@@ -4,7 +4,7 @@ import { FaLocationArrow } from 'react-icons/fa6'
 
 const Footer = () => {
   return (
-    <footer className='w-full p-4 bg-slate-900 text-white flex flex-col items-center justify-center gap-6'>
+    <footer className='w-full p-4 bg-slate-600 text-white flex flex-col items-center justify-center gap-6'>
       <div className='w-full flex flex-col md:flex-row items-center justify-around gap-4'>
         <div className='w-auto flex flex-col gap-2'>
           <p>We serve quality</p>

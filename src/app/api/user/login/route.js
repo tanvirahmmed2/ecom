@@ -18,6 +18,10 @@ export async function POST(req) {
 
     const user = result.rows[0];
 
+    if (user.is_banned) {
+      return Response.json({ error: 'Your account has been banned' }, { status: 403 });
+    }
+
     if (!user.is_active) {
       return Response.json({ error: 'Account is deactivated' }, { status: 403 });
     }

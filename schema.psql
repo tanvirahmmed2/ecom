@@ -12,6 +12,7 @@ CREATE TABLE users (
   role TEXT DEFAULT 'user'
     CHECK (role IN ('admin','manager','sales','user')),
   is_active BOOLEAN DEFAULT TRUE,
+  is_banned BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT now(),
   updated_at TIMESTAMP DEFAULT now()
 );
@@ -178,8 +179,7 @@ CREATE TABLE public.payments (
     change_amount    NUMERIC(10, 2) DEFAULT 0,
     payment_status   VARCHAR(30) DEFAULT 'pending'
                      CHECK (payment_status IN (
-                        'pending', 
-                        'success', 
+                        'pending',  
                         'failed', 
                         'refunded', 
                         'partial', 
@@ -265,3 +265,30 @@ CREATE TABLE support_messages(
   message TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT now()
 );
+
+CREATE TABLE issues (
+  issue_id SERIAL PRIMARY KEY,
+  sender_id INT REFERENCES users(user_id) ON DELETE CASCADE,
+  receiver_id INT REFERENCES users(user_id) ON DELETE CASCADE,
+  title VARCHAR(200) NOT NULL,
+  message TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT now()
+);
+
+CREATE OR REPLACE VIEW issues_view AS
+SELECT 
+  i.issue_id,
+  i.sender_id,
+  s.name AS sender_name,
+  s.email AS sender_email,
+  s.role AS sender_role,
+  i.receiver_id,
+  r.name AS receiver_name,
+  r.email AS receiver_email,
+  r.role AS receiver_role,
+  i.title,
+  i.message,
+  i.created_at
+FROM issues i
+LEFT JOIN users s ON i.sender_id = s.user_id
+LEFT JOIN users r ON i.receiver_id = r.user_id;

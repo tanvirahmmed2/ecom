@@ -21,7 +21,7 @@ export async function GET(req) {
     }
 
     const result = await query(
-      'SELECT user_id, name, email, phone, role, is_active, is_varified, created_at, updated_at FROM users WHERE user_id = $1',
+      'SELECT user_id, name, email, phone, role, is_active, is_varified, is_banned, created_at, updated_at FROM users WHERE user_id = $1',
       [decoded.user_id]
     );
 
@@ -30,6 +30,9 @@ export async function GET(req) {
     }
 
     const user = result.rows[0];
+    if (user.is_banned) {
+      return Response.json({ error: 'Account is banned' }, { status: 403 });
+    }
     if (!user.is_active) {
       return Response.json({ error: 'Account is deactivated' }, { status: 403 });
     }
