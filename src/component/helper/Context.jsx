@@ -3,8 +3,9 @@ import { createContext, useState, useEffect } from "react";
 import axios from "axios";
 
 
-export const Context = createContext()
+import toast from 'react-hot-toast'
 
+export const Context = createContext()
 
 const ContextProvider = ({ children }) => {
 
@@ -12,8 +13,111 @@ const ContextProvider = ({ children }) => {
     const [user, setUser] = useState(null)
     const [loading, setLoading] = useState(true)
 
-    const [cart, setCart]=useState({items:[]})
-    
+    const [cart, setCart] = useState({ items: [] })
+    const [cartInitialized, setCartInitialized] = useState(false)
+
+    useEffect(() => {
+        const saved = localStorage.getItem("ecom_cart")
+        if (saved) {
+            try {
+                setCart(JSON.parse(saved))
+            } catch (e) {
+                console.error("Failed to parse cart from localStorage", e)
+            }
+        }
+        setCartInitialized(true)
+    }, [])
+
+    useEffect(() => {
+        if (cartInitialized) {
+            localStorage.setItem("ecom_cart", JSON.stringify(cart))
+        }
+    }, [cart, cartInitialized])
+
+    const addToCart = (product, variant = null, qty = 1) => {
+        setCart(prev => {
+            const items = [...prev.items]
+            const variantName = variant ? variant.variant_name : null
+            const variantId = variant ? variant.variant_id : null
+            const existingIdx = items.findIndex(item => 
+                item.product_id === product.product_id && 
+                item.variant === variantName
+            )
+
+            const maxStock = variant ? parseInt(variant.stock, 10) : parseInt(product.stock, 10) || 0
+
+            if (existingIdx > -1) {
+                const newQty = items[existingIdx].quantity + qty
+                if (newQty > maxStock) {
+                    toast.error(`Cannot add more than ${maxStock} items to cart`)
+                    return prev
+                }
+                items[existingIdx].quantity = newQty
+            } else {
+                if (qty > maxStock) {
+                    toast.error(`Cannot add more than ${maxStock} items to cart`)
+                    return prev
+                }
+                items.push({
+                    product_id: product.product_id,
+                    name: product.name,
+                    image: product.image,
+                    sale_price: variant ? parseFloat(variant.price) : parseFloat(product.sale_price),
+                    discount_price: variant ? 0 : parseFloat(product.discount_price || 0),
+                    variant: variantName,
+                    variant_id: variantId,
+                    quantity: qty,
+                    slug: product.slug,
+                    max_stock: maxStock
+                })
+            }
+            toast.success(`${product.name} added to cart!`)
+            return { items }
+        })
+        setCartbar(true)
+    }
+
+    const increaseCartQty = (productId, variantName = null) => {
+        setCart(prev => {
+            const items = [...prev.items]
+            const idx = items.findIndex(item => item.product_id === productId && item.variant === variantName)
+            if (idx > -1) {
+                const item = items[idx]
+                if (item.quantity >= item.max_stock) {
+                    toast.error(`Cannot add more than ${item.max_stock} items to cart`)
+                    return prev
+                }
+                item.quantity += 1
+            }
+            return { items }
+        })
+    }
+
+    const decreaseCartQty = (productId, variantName = null) => {
+        setCart(prev => {
+            const items = prev.items.map(item => {
+                if (item.product_id === productId && item.variant === variantName) {
+                    return { ...item, quantity: item.quantity - 1 }
+                }
+                return item
+            }).filter(item => item.quantity > 0)
+            return { items }
+        })
+    }
+
+    const removeFromCart = (productId, variantName = null) => {
+        setCart(prev => {
+            const items = prev.items.filter(item => 
+                !(item.product_id === productId && item.variant === variantName)
+            )
+            return { items }
+        })
+        toast.success("Item removed from cart")
+    }
+
+    const clearCart = () => {
+        setCart({ items: [] })
+    }
 
     const [cartbar, setCartbar]=useState(false)
     const [userSidebar, setUserSidebar]=useState(false)
@@ -88,8 +192,9 @@ const ContextProvider = ({ children }) => {
     };
 
     const contextValue = {
-        categories,cart, setCart,
-        cartbar, setCartbar,userSidebar, setUserSidebar,dashSidebar, setDashSidebar,
+        categories, cart, setCart,
+        addToCart, increaseCartQty, decreaseCartQty, removeFromCart, clearCart,
+        cartbar, setCartbar, userSidebar, setUserSidebar, dashSidebar, setDashSidebar,
         user, setUser, loading, logout,
         website, fetchWebsite
     }

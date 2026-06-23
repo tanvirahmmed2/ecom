@@ -11,7 +11,8 @@ import {
   BiMessageSquareDetail,
   BiChevronRight,
   BiShieldQuarter,
-  BiLoaderAlt
+  BiLoaderAlt,
+  BiSolidTruck
 } from 'react-icons/bi'
 
 export default function DashboardSalesPage() {
@@ -62,6 +63,20 @@ export default function DashboardSalesPage() {
       path: '/dashboard/sales/pending-sale',
       icon: <BiTime />,
       color: 'bg-amber-50 text-amber-600 hover:border-amber-500'
+    },
+    {
+      name: 'Confirmed Orders',
+      description: "Review and process confirmed orders, dispatch them for delivery, or deliver them directly.",
+      path: '/dashboard/sales/confirmed-sale',
+      icon: <BiCheckCircle />,
+      color: 'bg-emerald-50 text-emerald-600 hover:border-emerald-500'
+    },
+    {
+      name: 'Out for Delivery',
+      description: "Manage orders currently with the courier. Update statuses to delivered or process returns.",
+      path: '/dashboard/sales/out_for_delivery',
+      icon: <BiSolidTruck />,
+      color: 'bg-cyan-50 text-cyan-600 hover:border-cyan-555 bg-cyan-50 text-cyan-600 hover:border-cyan-500'
     },
     {
       name: 'Completed Orders',

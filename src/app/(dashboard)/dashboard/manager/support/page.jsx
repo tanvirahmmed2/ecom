@@ -4,6 +4,7 @@ import axios from 'axios'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
 import { Context } from '@/component/helper/Context'
+import RichTextEditor from '@/component/helper/RichTextEditor'
 import { 
   BiMessageSquareDetail, 
   BiSend, 
@@ -89,7 +90,8 @@ export default function DashboardManagerSupportPage() {
 
   const handleSendMessage = async (e) => {
     e.preventDefault()
-    if (!replyMessage.trim() || !activeTicket) return
+    const cleanMsg = replyMessage ? replyMessage.replace(/<[^>]*>/g, '').trim() : '';
+    if (!cleanMsg || !activeTicket) return
 
     setSubmittingMessage(true)
     const ticketId = activeTicket.ticket.support_id
@@ -462,9 +464,10 @@ export default function DashboardManagerSupportPage() {
                         {new Date(activeTicket.ticket.created_at).toLocaleString()}
                       </span>
                     </div>
-                    <div className="text-xs text-slate-750 whitespace-pre-wrap leading-relaxed">
-                      {activeTicket.ticket.description || <span className="italic text-slate-405">No description supplied.</span>}
-                    </div>
+                     <div 
+                       className="text-xs text-slate-750 leading-relaxed ProseMirror"
+                       dangerouslySetInnerHTML={{ __html: activeTicket.ticket.description || '<span class="italic text-slate-400">No description supplied.</span>' }}
+                     />
                   </div>
 
                   <div className="w-full flex items-center justify-center my-2 shrink-0">
@@ -502,15 +505,16 @@ export default function DashboardManagerSupportPage() {
                             )}
                           </div>
 
-                          <div className={`p-3 rounded-2xl text-xs whitespace-pre-wrap leading-relaxed shadow-sm ${
-                            isMe 
-                              ? 'bg-slate-900 text-white rounded-tr-none' 
-                              : isSupportRole
-                                ? 'bg-emerald-50 text-emerald-900 border border-emerald-100 rounded-tl-none'
-                                : 'bg-white text-slate-800 border border-slate-100 rounded-tl-none'
-                          }`}>
-                            {msg.message}
-                          </div>
+                          <div 
+                            className={`p-3 rounded-2xl text-xs leading-relaxed shadow-sm ProseMirror ${
+                              isMe 
+                                ? 'bg-slate-900 text-white rounded-tr-none' 
+                                : isSupportRole
+                                  ? 'bg-emerald-50 text-emerald-900 border border-emerald-100 rounded-tl-none'
+                                  : 'bg-white text-slate-800 border border-slate-100 rounded-tl-none'
+                            }`}
+                            dangerouslySetInnerHTML={{ __html: msg.message }}
+                          />
 
                           <span className="text-xxxs text-slate-400 font-mono mt-1 px-1">
                             {new Date(msg.created_at).toLocaleTimeString(undefined, {
@@ -527,20 +531,19 @@ export default function DashboardManagerSupportPage() {
 
                 {/* Reply bar composer */}
                 <div className="p-4 bg-white border-t border-slate-100 shrink-0">
-                  <form onSubmit={handleSendMessage} className="flex flex-col gap-2">
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        placeholder="Type response to be emailed to customer immediately..."
-                        value={replyMessage}
-                        onChange={(e) => setReplyMessage(e.target.value)}
-                        disabled={submittingMessage}
-                        className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition"
-                      />
+                  <form onSubmit={handleSendMessage} className="flex flex-col gap-3">
+                    <div className="flex gap-2 items-end">
+                      <div className="flex-1">
+                        <RichTextEditor
+                          value={replyMessage}
+                          onChange={setReplyMessage}
+                          placeholder="Type response to be emailed to customer immediately..."
+                        />
+                      </div>
                       <button
                         type="submit"
-                        disabled={submittingMessage || !replyMessage.trim()}
-                        className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-semibold transition cursor-pointer flex items-center justify-center shrink-0 disabled:opacity-40 shadow-sm shadow-emerald-650/10"
+                        disabled={submittingMessage || !replyMessage.replace(/<[^>]*>/g, '').trim()}
+                        className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-semibold transition cursor-pointer flex items-center justify-center shrink-0 disabled:opacity-40 shadow-sm shadow-emerald-650/10 h-11"
                       >
                         {submittingMessage ? (
                           <BiLoaderAlt className="animate-spin text-lg" />
@@ -549,7 +552,7 @@ export default function DashboardManagerSupportPage() {
                         )}
                       </button>
                     </div>
-                    <span className="text-xxs text-slate-450 italic ml-1">Customer will immediately receive an email notification alerting them of your reply.</span>
+                    <span className="text-xxs text-slate-455 italic ml-1">Customer will immediately receive an email notification alerting them of your reply.</span>
                   </form>
                 </div>
 

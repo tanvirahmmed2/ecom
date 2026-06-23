@@ -21,7 +21,8 @@ import {
   BiArrowBack,
   BiTime,
   BiCheckCircle,
-  BiStoreAlt
+  BiStoreAlt,
+  BiSolidTruck
 } from 'react-icons/bi'
 
 const Dashboardsidebar = () => {
@@ -64,6 +65,8 @@ const Dashboardsidebar = () => {
     const salesLinks = [
       { name: 'Create Sale', path: '/dashboard/sales/sale', icon: <BiCart /> },
       { name: 'Pending Sales', path: '/dashboard/sales/pending-sale', icon: <BiTime /> },
+      { name: 'Confirmed Sales', path: '/dashboard/sales/confirmed-sale', icon: <BiCheckCircle /> },
+      { name: 'Out for Delivery', path: '/dashboard/sales/out_for_delivery', icon: <BiSolidTruck /> },
       { name: 'Completed Sales', path: '/dashboard/sales/completed-sale', icon: <BiCheckCircle /> },
       { name: 'Payments', path: '/dashboard/sales/payments', icon: <BiDollarCircle /> },
       { name: 'History', path: '/dashboard/sales/history', icon: <BiHistory /> },

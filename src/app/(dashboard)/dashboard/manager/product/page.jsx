@@ -193,9 +193,13 @@ export default function DashboardManagerProductPage() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex flex-col gap-0.5">
-                          <span className="font-semibold text-slate-800">${p.sale_price}</span>
-                          {p.discount_price > 0 && (
-                            <span className="text-slate-400 text-xs line-through">${p.discount_price}</span>
+                          {parseFloat(p.discount_price) > 0 ? (
+                            <>
+                              <span className="font-semibold text-slate-800">৳{(parseFloat(p.sale_price) - parseFloat(p.discount_price)).toFixed(2)}</span>
+                              <span className="text-slate-400 text-xs line-through">৳{parseFloat(p.sale_price).toFixed(2)}</span>
+                            </>
+                          ) : (
+                            <span className="font-semibold text-slate-800">৳{parseFloat(p.sale_price).toFixed(2)}</span>
                           )}
                         </div>
                       </td>

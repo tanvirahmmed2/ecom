@@ -1,6 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
+import RichTextEditor from '@/component/helper/RichTextEditor'
 import { BiUpload, BiChevronLeft, BiLoaderAlt } from 'react-icons/bi'
 
 export default function BrandForm({ initialData, onSubmit, loading }) {
@@ -76,12 +77,10 @@ export default function BrandForm({ initialData, onSubmit, loading }) {
         {/* Description */}
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-semibold text-slate-700">Description</label>
-          <textarea
-            placeholder="Introduce details about the brand..."
+          <RichTextEditor
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={3}
-            className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition resize-none"
+            onChange={setDescription}
+            placeholder="Introduce details about the brand..."
           />
         </div>
 

@@ -3,6 +3,7 @@ import React, { useContext, useEffect, useState } from 'react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import { Context } from '@/component/helper/Context'
+import RichTextEditor from '@/component/helper/RichTextEditor'
 import { 
   BiMessageSquareDetail, 
   BiSend, 
@@ -51,7 +52,8 @@ export default function DashboardManagerContactPage() {
 
   const handleReplySubmit = async (e, contactId) => {
     e.preventDefault()
-    if (!replyMessage.trim()) {
+    const cleanMsg = replyMessage ? replyMessage.replace(/<[^>]*>/g, '').trim() : '';
+    if (!cleanMsg) {
       toast.error('Reply message cannot be empty.')
       return
     }
@@ -230,9 +232,10 @@ export default function DashboardManagerContactPage() {
                         {/* Client Inquiry Message */}
                         <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/60 flex flex-col gap-1.5">
                           <span className="text-xxs font-bold text-slate-450 uppercase tracking-widest">Customer Message</span>
-                          <p className="text-slate-650 text-sm leading-relaxed whitespace-pre-wrap font-medium">
-                            {contact.message}
-                          </p>
+                          <div 
+                            className="text-slate-650 text-sm leading-relaxed ProseMirror font-medium"
+                            dangerouslySetInnerHTML={{ __html: contact.message }}
+                          />
                         </div>
 
                         {/* Existing Responses conversation log */}
@@ -253,9 +256,10 @@ export default function DashboardManagerContactPage() {
                                     {new Date(reply.created_at).toLocaleString()}
                                   </span>
                                 </div>
-                                <p className="text-slate-650 text-xs leading-relaxed whitespace-pre-wrap italic">
-                                  {reply.message}
-                                </p>
+                                <div 
+                                  className="text-slate-650 text-xs leading-relaxed ProseMirror"
+                                  dangerouslySetInnerHTML={{ __html: reply.message }}
+                                />
                               </div>
                             ))}
                           </div>
@@ -271,13 +275,10 @@ export default function DashboardManagerContactPage() {
                           ) : (
                             <form onSubmit={(e) => handleReplySubmit(e, contact.contact_id)} className="flex flex-col gap-3">
                               <label className="text-xs font-bold text-slate-700 uppercase">Send Reply Response (via Mailer) <span className="text-red-500">*</span></label>
-                              <textarea
-                                required
-                                rows={3}
-                                placeholder="Type support response to be emailed to client..."
+                              <RichTextEditor
                                 value={replyMessage}
-                                onChange={(e) => setReplyMessage(e.target.value)}
-                                className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition resize-none"
+                                onChange={setReplyMessage}
+                                placeholder="Type support response to be emailed to client..."
                               />
                               
                               <div className="flex justify-between items-center mt-1">

@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
+import Placeholder from '@tiptap/extension-placeholder'
 import { 
   BiBold, 
   BiItalic, 
@@ -15,7 +16,7 @@ import {
   BiHeading 
 } from 'react-icons/bi'
 
-export default function RichTextEditor({ value, onChange }) {
+export default function RichTextEditor({ value, onChange, placeholder = 'Write description or content here...' }) {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -23,7 +24,12 @@ export default function RichTextEditor({ value, onChange }) {
   }, []);
 
   const editor = useEditor({
-    extensions: [StarterKit],
+    extensions: [
+      StarterKit,
+      Placeholder.configure({
+        placeholder,
+      })
+    ],
     content: value || '',
     immediatelyRender: false,
     onUpdate: ({ editor }) => {
@@ -156,7 +162,10 @@ export default function RichTextEditor({ value, onChange }) {
       </div>
 
       {/* Editor Content Area */}
-      <div className="flex-1 p-3 text-slate-800 text-sm focus:outline-none min-h-[100px] prose prose-sm max-w-none prose-slate">
+      <div 
+        onClick={() => editor.chain().focus().run()}
+        className="flex-1 p-3 text-slate-800 text-sm cursor-text min-h-[120px]"
+      >
         <EditorContent editor={editor} />
       </div>
 

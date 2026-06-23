@@ -1,26 +1,38 @@
 'use client'
-import React from 'react'
+import React, { useContext } from 'react'
 import Link from 'next/link'
 import { BiCart, BiShow } from 'react-icons/bi'
+import { Context } from '../helper/Context'
 
 export default function ProductCard({ product }) {
   if (!product) return null
 
+  const { addToCart } = useContext(Context)
+
   const {
+    product_id,
     name,
     slug,
     image,
     sale_price,
     discount_price,
     category_name,
-    brand_name
+    brand_name,
+    stock,
+    total_stock
   } = product
 
-  const finalPrice = discount_price && parseFloat(discount_price) > 0 
-    ? parseFloat(discount_price) 
+  const hasDiscount = discount_price && parseFloat(discount_price) > 0
+
+  const finalPrice = hasDiscount
+    ? Math.max(0, parseFloat(sale_price) - parseFloat(discount_price))
     : parseFloat(sale_price)
 
-  const hasDiscount = discount_price && parseFloat(discount_price) > 0
+  const handleAddToCart = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    addToCart(product)
+  }
 
   return (
     <div className="group bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col overflow-hidden relative">
@@ -74,22 +86,32 @@ export default function ProductCard({ product }) {
           <div className="flex flex-col">
             {hasDiscount ? (
               <div className="flex items-baseline gap-1.5">
-                <span className="text-base font-bold text-slate-900">${finalPrice.toFixed(2)}</span>
-                <span className="text-xs text-slate-400 line-through">${parseFloat(sale_price).toFixed(2)}</span>
+                <span className="text-base font-bold text-slate-900">৳{finalPrice.toFixed(2)}</span>
+                <span className="text-xs text-slate-400 line-through">৳{parseFloat(sale_price).toFixed(2)}</span>
               </div>
             ) : (
-              <span className="text-base font-bold text-slate-900">${finalPrice.toFixed(2)}</span>
+              <span className="text-base font-bold text-slate-900">৳{finalPrice.toFixed(2)}</span>
             )}
           </div>
 
-          <Link
-            href={`/products/${slug}`}
-            className="p-2 bg-slate-905 text-slate-600 hover:bg-emerald-600 hover:text-white rounded-xl transition-all duration-200 shadow-sm border border-slate-100 flex items-center justify-center gap-1.5"
-            title="View product options"
-          >
-            <BiCart className="text-lg" />
-            <span className="text-xs font-bold px-0.5">Buy</span>
-          </Link>
+          {((stock !== undefined && parseInt(stock, 10) <= 0) || (total_stock !== undefined && parseInt(total_stock, 10) <= 0)) ? (
+            <button
+              disabled
+              className="p-2 bg-slate-100 text-slate-400 rounded-xl cursor-not-allowed border border-slate-150 flex items-center justify-center gap-1.5"
+              title="Out of Stock"
+            >
+              <span className="text-[10px] font-bold px-0.5">Out of Stock</span>
+            </button>
+          ) : (
+            <button
+              onClick={handleAddToCart}
+              className="p-2 bg-slate-900/5 text-slate-650 hover:bg-emerald-600 hover:text-white rounded-xl transition-all duration-200 shadow-sm border border-slate-100 flex items-center justify-center gap-1.5 cursor-pointer"
+              title="Add to Cart"
+            >
+              <BiCart className="text-lg" />
+              <span className="text-xs font-bold px-0.5">Add</span>
+            </button>
+          )}
         </div>
 
       </div>

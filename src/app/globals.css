@@ -15,10 +15,15 @@
 /* Tiptap Editor Styling */
 .ProseMirror {
   outline: none;
-  min-height: 100px;
+}
+.ProseMirror[contenteditable="true"] {
+  min-height: 120px;
 }
 .ProseMirror p {
   margin-bottom: 0.5rem;
+}
+.ProseMirror p:last-child {
+  margin-bottom: 0;
 }
 .ProseMirror ul {
   list-style-type: disc;
@@ -51,4 +56,14 @@
   font-family: monospace;
   overflow-x: auto;
   margin-bottom: 0.5rem;
+}
+
+/* Placeholder styling */
+.ProseMirror p.is-editor-empty:first-child::before,
+.ProseMirror p.is-empty::before {
+  color: #94a3b8;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
 }

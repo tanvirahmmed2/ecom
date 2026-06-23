@@ -34,6 +34,11 @@ export default function ProductsCategorySlugPage() {
   const [sortBy, setSortBy] = useState('newest')
   const [minPrice, setMinPrice] = useState('')
   const [maxPrice, setMaxPrice] = useState('')
+  const [inStockOnly, setInStockOnly] = useState(false)
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 12
 
   useEffect(() => {
     if (!slug) return
@@ -74,6 +79,11 @@ export default function ProductsCategorySlugPage() {
     }
   }
 
+  // Reset pagination to page 1 on any filter parameter changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, sortBy, minPrice, maxPrice, inStockOnly])
+
   // Filter & Sort Logic
   const filteredProducts = products
     .filter(p => {
@@ -81,23 +91,27 @@ export default function ProductsCategorySlugPage() {
         (p.description && p.description.toLowerCase().includes(searchTerm.toLowerCase()))
       
       const finalPrice = p.discount_price && parseFloat(p.discount_price) > 0 
-        ? parseFloat(p.discount_price) 
+        ? Math.max(0, parseFloat(p.sale_price) - parseFloat(p.discount_price)) 
         : parseFloat(p.sale_price)
 
       const matchesMin = minPrice === '' || finalPrice >= parseFloat(minPrice)
       const matchesMax = maxPrice === '' || finalPrice <= parseFloat(maxPrice)
+      const matchesStock = !inStockOnly || (p.total_stock ? parseInt(p.total_stock, 10) > 0 : (parseInt(p.stock, 10) > 0))
 
-      return matchesSearch && matchesMin && matchesMax
+      return matchesSearch && matchesMin && matchesMax && matchesStock
     })
     .sort((a, b) => {
-      const priceA = a.discount_price && parseFloat(a.discount_price) > 0 ? parseFloat(a.discount_price) : parseFloat(a.sale_price)
-      const priceB = b.discount_price && parseFloat(b.discount_price) > 0 ? parseFloat(b.discount_price) : parseFloat(b.sale_price)
+      const priceA = a.discount_price && parseFloat(a.discount_price) > 0 ? Math.max(0, parseFloat(a.sale_price) - parseFloat(a.discount_price)) : parseFloat(a.sale_price)
+      const priceB = b.discount_price && parseFloat(b.discount_price) > 0 ? Math.max(0, parseFloat(b.sale_price) - parseFloat(b.discount_price)) : parseFloat(b.sale_price)
 
       if (sortBy === 'price-low') return priceA - priceB
       if (sortBy === 'price-high') return priceB - priceA
       if (sortBy === 'name-az') return a.name.localeCompare(b.name)
       return b.product_id - a.product_id // newest first
     })
+
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage)
+  const paginatedProducts = filteredProducts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
 
   if (loading) {
     return (
@@ -234,7 +248,7 @@ export default function ProductsCategorySlugPage() {
               <label className="text-xs font-bold text-slate-500">Price Range</label>
               <div className="flex items-center gap-2">
                 <div className="relative flex-1">
-                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"><BiDollar /></span>
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold">৳</span>
                   <input
                     type="number"
                     placeholder="Min"
@@ -245,7 +259,7 @@ export default function ProductsCategorySlugPage() {
                 </div>
                 <span className="text-slate-400 text-xs">-</span>
                 <div className="relative flex-1">
-                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"><BiDollar /></span>
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold">৳</span>
                   <input
                     type="number"
                     placeholder="Max"
@@ -257,7 +271,6 @@ export default function ProductsCategorySlugPage() {
               </div>
             </div>
 
-            {/* Sort Order */}
             <div className="flex flex-col gap-2">
               <label className="text-xs font-bold text-slate-500">Sort By</label>
               <div className="relative">
@@ -275,12 +288,27 @@ export default function ProductsCategorySlugPage() {
               </div>
             </div>
 
-            {(searchTerm || minPrice || maxPrice) && (
+            {/* In Stock Only Checkbox */}
+            <div className="flex items-center gap-2.5 mt-1 bg-slate-50 p-3 rounded-xl border border-slate-200/60">
+              <input
+                type="checkbox"
+                id="inStockOnly"
+                checked={inStockOnly}
+                onChange={(e) => setInStockOnly(e.target.checked)}
+                className="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500 cursor-pointer"
+              />
+              <label htmlFor="inStockOnly" className="text-xs font-bold text-slate-700 cursor-pointer select-none">
+                In Stock Only
+              </label>
+            </div>
+
+            {(searchTerm || minPrice || maxPrice || inStockOnly) && (
               <button
                 onClick={() => {
                   setSearchTerm('')
                   setMinPrice('')
                   setMaxPrice('')
+                  setInStockOnly(false)
                 }}
                 className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition cursor-pointer text-center"
               >
@@ -299,9 +327,9 @@ export default function ProductsCategorySlugPage() {
               </span>
             </div>
 
-            {filteredProducts.length === 0 ? (
+            {paginatedProducts.length === 0 ? (
               <div className="w-full bg-white rounded-3xl border border-slate-105 p-16 text-center shadow-sm flex flex-col items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 text-4xl">
+                <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center text-slate-350 text-4xl">
                   <BiSearch />
                 </div>
                 <div>
@@ -312,11 +340,61 @@ export default function ProductsCategorySlugPage() {
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                {filteredProducts.map((p) => (
-                  <ProductCard key={p.product_id} product={p} />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                  {paginatedProducts.map((p) => (
+                    <ProductCard key={p.product_id} product={p} />
+                  ))}
+                </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-1.5 mt-8 border-t border-slate-100 pt-6">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                      className="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      Previous
+                    </button>
+                    
+                    {Array.from({ length: totalPages }, (_, index) => {
+                      const pageNum = index + 1
+                      const isCurrent = currentPage === pageNum
+                      
+                      if (totalPages > 5 && Math.abs(currentPage - pageNum) > 2 && pageNum !== 1 && pageNum !== totalPages) {
+                        if (pageNum === 2 || pageNum === totalPages - 1) {
+                          return <span key={pageNum} className="text-slate-400 text-xs px-1">...</span>
+                        }
+                        return null
+                      }
+                      
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => setCurrentPage(pageNum)}
+                          className={`w-9 h-9 rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center ${
+                            isCurrent 
+                              ? 'bg-emerald-600 text-white shadow-md shadow-emerald-605/10' 
+                              : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 hover:border-slate-350'
+                          }`}
+                          style={isCurrent ? { backgroundColor: themeColor } : {}}
+                        >
+                          {pageNum}
+                        </button>
+                      )
+                    })}
+
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+              </>
             )}
 
           </div>

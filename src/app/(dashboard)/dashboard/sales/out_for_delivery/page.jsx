@@ -5,51 +5,53 @@ import Link from 'next/link'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import { 
-  BiTime, 
+  BiSolidTruck, 
   BiUser, 
   BiPhone, 
   BiMap, 
   BiCheck, 
-  BiX, 
-  BiSolidTruck, 
+  BiUndo, 
   BiRefresh, 
   BiLoaderAlt,
   BiMessageAltDetail
 } from 'react-icons/bi'
 
-export default function PendingSalesPage() {
+export default function OutForDeliveryPage() {
   const { dashSidebar, website } = useContext(Context)
   const themeColor = website?.theme_color || '#10b981'
 
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
 
-  const fetchPendingOrders = async () => {
+  const fetchOutForDeliveryOrders = async () => {
     setLoading(true)
     try {
-      const res = await axios.get('/api/sale?status=pending')
+      const res = await axios.get('/api/sale?status=out_for_delivery')
       setOrders(res.data)
     } catch (err) {
-      console.error('Failed to load pending sales orders:', err)
-      toast.error('Failed to fetch pending orders')
+      console.error('Failed to load out for delivery orders:', err)
+      toast.error('Failed to fetch orders')
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
-    fetchPendingOrders()
+    fetchOutForDeliveryOrders()
   }, [])
 
   const handleUpdateStatus = async (orderId, newStatus) => {
-    const confirmMsg = `Are you sure you want to change status to "${newStatus}"?`
+    let confirmMsg = `Mark order #${orderId} as "${newStatus}"?`
+    if (newStatus === 'returned') {
+      confirmMsg = `Are you sure you want to RETURN order #${orderId}? This will automatically RESTOCK all items.`
+    }
     if (!window.confirm(confirmMsg)) return
 
     const toastId = toast.loading(`Updating order #${orderId} status...`)
     try {
       await axios.put(`/api/sale/${orderId}`, { status: newStatus })
-      toast.success(`Order #${orderId} marked as ${newStatus}`, { id: toastId })
-      fetchPendingOrders()
+      toast.success(newStatus === 'returned' ? `Order #${orderId} returned and restocked.` : `Order #${orderId} marked as ${newStatus}`, { id: toastId })
+      fetchOutForDeliveryOrders()
     } catch (err) {
       console.error('Failed to update order status:', err)
       toast.error(err.response?.data?.error || `Failed to update status to ${newStatus}`, { id: toastId })
@@ -63,11 +65,11 @@ export default function PendingSalesPage() {
         {/* Header section */}
         <div className="flex items-center justify-between border-b border-slate-200/60 pb-4">
           <div>
-            <h1 className="text-2xl font-black text-slate-800 tracking-tight">Pending Orders Desk</h1>
-            <p className="text-xs text-slate-500 mt-1">Review, decline, confirm, or instantly deliver incoming checkout sales orders.</p>
+            <h1 className="text-2xl font-black text-slate-800 tracking-tight">Out for Delivery Desk</h1>
+            <p className="text-xs text-slate-500 mt-1">Manage orders currently out for delivery. Mark as delivered on receipt, or process returns.</p>
           </div>
           <button
-            onClick={fetchPendingOrders}
+            onClick={fetchOutForDeliveryOrders}
             disabled={loading}
             className="p-2 bg-white hover:bg-slate-50 text-slate-700 rounded-xl border border-slate-200 transition cursor-pointer shadow-sm disabled:opacity-40"
           >
@@ -79,16 +81,16 @@ export default function PendingSalesPage() {
         {loading ? (
           <div className="w-full py-20 flex flex-col items-center justify-center gap-2">
             <BiLoaderAlt className="animate-spin text-4xl text-slate-800" />
-            <p className="text-slate-500 text-sm font-semibold animate-pulse">Fetching pending sales desk...</p>
+            <p className="text-slate-500 text-sm font-semibold animate-pulse">Fetching out for delivery orders...</p>
           </div>
         ) : orders.length === 0 ? (
           <div className="w-full bg-white border border-slate-100 rounded-2xl py-16 px-6 text-center flex flex-col items-center gap-3">
             <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 text-2xl">
-              <BiTime />
+              <BiSolidTruck />
             </div>
             <div>
-              <h3 className="font-bold text-slate-850 text-base">No Pending Orders</h3>
-              <p className="text-slate-500 text-xs mt-1">There are no client checkouts waiting in the queue.</p>
+              <h3 className="font-bold text-slate-850 text-base">No Dispatched Orders</h3>
+              <p className="text-slate-500 text-xs mt-1">There are no orders out for delivery at the moment.</p>
             </div>
           </div>
         ) : (
@@ -104,7 +106,7 @@ export default function PendingSalesPage() {
                     <span className="text-sm font-black text-slate-800">
                       Order #ORD-{order.order_id}
                     </span>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-50 text-amber-700">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-cyan-50 text-cyan-700">
                       {order.status}
                     </span>
                     <span className="text-xxs text-slate-400 font-medium">
@@ -134,7 +136,7 @@ export default function PendingSalesPage() {
                     </div>
                     <div className="flex flex-col gap-1 col-span-1 md:col-span-3 border-t border-slate-200/40 pt-2 mt-1">
                       <span className="font-bold text-slate-450 uppercase tracking-wide">Shipping Address</span>
-                      <span className="text-slate-650 flex items-start gap-1 leading-relaxed">
+                      <span className="text-slate-655 text-slate-600 flex items-start gap-1 leading-relaxed">
                         <BiMap className="text-sm text-slate-500 mt-0.5 shrink-0" /> {order.shipping_address}
                       </span>
                     </div>
@@ -207,25 +209,18 @@ export default function PendingSalesPage() {
                   {/* Actions buttons */}
                   <div className="flex flex-col gap-2.5 mt-auto">
                     <button
-                      onClick={() => handleUpdateStatus(order.order_id, 'confirmed')}
-                      className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:scale-[1.01]"
-                    >
-                      <BiCheck className="text-lg" /> Confirm Order
-                    </button>
-                    
-                    <button
                       onClick={() => handleUpdateStatus(order.order_id, 'delivered')}
                       className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-500/20 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:scale-[1.01]"
                       style={{ backgroundColor: themeColor }}
                     >
-                      <BiSolidTruck className="text-base" /> Deliver Instantly
+                      <BiCheck className="text-lg" /> Order Delivered
                     </button>
-
+                    
                     <button
-                      onClick={() => handleUpdateStatus(order.order_id, 'cancelled')}
-                      className="w-full py-2.5 bg-white hover:bg-rose-50 border border-slate-200 text-slate-650 hover:text-rose-600 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                      onClick={() => handleUpdateStatus(order.order_id, 'returned')}
+                      className="w-full py-2.5 bg-white hover:bg-rose-50 border border-slate-200 text-slate-650 hover:text-rose-600 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:scale-[1.01]"
                     >
-                      <BiX className="text-lg" /> Decline Order
+                      <BiUndo className="text-base" /> Return / Restock
                     </button>
                   </div>
                 </div>

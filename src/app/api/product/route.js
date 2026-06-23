@@ -16,7 +16,8 @@ function slugify(text) {
 export async function GET(req) {
   try {
     let sql = `
-      SELECT p.*, c.name AS category_name, b.name AS brand_name 
+      SELECT p.*, c.name AS category_name, b.name AS brand_name,
+             COALESCE((SELECT SUM(stock)::integer FROM product_variants WHERE product_id = p.product_id), p.stock) AS total_stock
       FROM products p
       LEFT JOIN categories c ON p.category_id = c.category_id
       LEFT JOIN brands b ON p.brand_id = b.brand_id

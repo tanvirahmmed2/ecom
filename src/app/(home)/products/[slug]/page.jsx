@@ -5,6 +5,7 @@ import Link from 'next/link'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import { Context } from '@/component/helper/Context'
+import SameCategory from '@/component/helper/SameCategory'
 import { 
   BiCart, 
   BiArrowBack, 
@@ -18,7 +19,7 @@ export default function ProductDetailPage() {
   const params = useParams()
   const slug = params?.slug
 
-  const { cart, setCart, setCartbar, website } = useContext(Context)
+  const { cart, setCart, setCartbar, website, addToCart } = useContext(Context)
   const themeColor = website?.theme_color || '#10b981'
 
   const [product, setProduct] = useState(null)
@@ -72,58 +73,20 @@ export default function ProductDetailPage() {
     )
   }
 
+  const hasDiscount = !selectedVariant && product.discount_price && parseFloat(product.discount_price) > 0
+
   const basePrice = selectedVariant 
     ? parseFloat(selectedVariant.price) 
-    : (product.discount_price && parseFloat(product.discount_price) > 0 
-        ? parseFloat(product.discount_price) 
+    : (hasDiscount
+        ? Math.max(0, parseFloat(product.sale_price) - parseFloat(product.discount_price))
         : parseFloat(product.sale_price))
 
-  const hasDiscount = !selectedVariant && product.discount_price && parseFloat(product.discount_price) > 0
   const currentStock = selectedVariant 
     ? parseInt(selectedVariant.stock, 10) 
     : parseInt(product.stock, 10) || 0
 
   const handleAddToCart = () => {
-    if (currentStock <= 0) {
-      toast.error('This item is currently out of stock')
-      return
-    }
-    if (quantity > currentStock) {
-      toast.error(`Cannot add more than ${currentStock} items to cart`)
-      return
-    }
-    // Add to Context Cart
-    const cartItem = {
-      product_id: product.product_id,
-      name: product.name,
-      image: product.image,
-      price: basePrice,
-      variant: selectedVariant ? selectedVariant.variant_name : null,
-      quantity: quantity
-    }
-
-    setCart(prev => {
-      const items = [...(prev?.items || [])]
-      const existingIdx = items.findIndex(item => 
-        item.product_id === cartItem.product_id && 
-        item.variant === cartItem.variant
-      )
-
-      if (existingIdx > -1) {
-        // Also check if combined quantity exceeds stock
-        if (items[existingIdx].quantity + quantity > currentStock) {
-          toast.error(`Cannot add more than ${currentStock} items to cart`)
-          return prev
-        }
-        items[existingIdx].quantity += quantity
-      } else {
-        items.push(cartItem)
-      }
-      return { items }
-    })
-
-    toast.success(`${product.name} added to cart!`)
-    setCartbar(true)
+    addToCart(product, selectedVariant, quantity)
   }
 
   return (
@@ -185,10 +148,10 @@ export default function ProductDetailPage() {
             <div className="p-4 bg-slate-50 rounded-2xl flex flex-col gap-1 border border-slate-100">
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Purchase Price</span>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-black text-slate-900">${basePrice.toFixed(2)}</span>
+                <span className="text-2xl font-black text-slate-900">৳{basePrice.toFixed(2)}</span>
                 {hasDiscount && (
                   <span className="text-sm font-semibold text-slate-400 line-through">
-                    ${parseFloat(product.sale_price).toFixed(2)}
+                    ৳{parseFloat(product.sale_price).toFixed(2)}
                   </span>
                 )}
               </div>
@@ -220,7 +183,7 @@ export default function ProductDetailPage() {
                         }`}
                         style={isSelected ? { borderColor: themeColor, color: themeColor } : {}}
                       >
-                        {v.variant_name} (${parseFloat(v.price).toFixed(2)})
+                        {v.variant_name} (৳{parseFloat(v.price).toFixed(2)})
                       </button>
                     )
                   })}
@@ -281,12 +244,22 @@ export default function ProductDetailPage() {
           {/* Description Section */}
           <div className="md:col-span-12 flex flex-col gap-3 pt-6 border-t border-slate-100">
             <h3 className="font-bold text-slate-800 text-sm">Product Description</h3>
-            <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-line">
-              {product.description || 'No detailed description available for this product yet. Rest assured, this is a premium quality item backed by full supplier logistics dispatch and quality assurance checks.'}
-            </p>
+            {product.description ? (
+              <div 
+                className="text-slate-600 text-sm leading-relaxed ProseMirror font-normal"
+                dangerouslySetInnerHTML={{ __html: product.description }}
+              />
+            ) : (
+              <p className="text-slate-600 text-sm leading-relaxed">
+                No detailed description available for this product yet. Rest assured, this is a premium quality item backed by full supplier logistics dispatch and quality assurance checks.
+              </p>
+            )}
           </div>
 
         </div>
+
+        {/* Same Category Recommendations */}
+        <SameCategory categoryId={product.category_id} excludeProductId={product.product_id} />
 
       </div>
     </div>

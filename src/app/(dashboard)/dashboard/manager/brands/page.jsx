@@ -124,7 +124,7 @@ export default function DashboardManagerBrandsPage() {
                 <div>
                   <h3 className="font-bold text-slate-800 text-lg line-clamp-1">{brand.name}</h3>
                   <p className="text-slate-500 text-xs mt-1 line-clamp-2 leading-relaxed">
-                    {brand.description || 'No description available for this brand label.'}
+                    {brand.description ? brand.description.replace(/<[^>]*>/g, '') : 'No description available for this brand label.'}
                   </p>
                 </div>
 
