@@ -4,6 +4,7 @@ import axios from 'axios'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
 import { Context } from '@/component/helper/Context'
+import RichTextEditor from '@/component/helper/RichTextEditor'
 import { 
   BiMessageSquareDetail, 
   BiSend, 
@@ -122,7 +123,8 @@ export default function UserSupportPage() {
 
   const handleSendMessage = async (e) => {
     e.preventDefault()
-    if (!replyMessage.trim()) return
+    const cleanMsg = replyMessage ? replyMessage.replace(/<[^>]*>/g, '').trim() : '';
+    if (!cleanMsg) return
     if (!activeTicket) return
 
     setSubmittingMessage(true)
@@ -374,9 +376,10 @@ export default function UserSupportPage() {
                         {new Date(activeTicket.ticket.created_at).toLocaleString()}
                       </span>
                     </div>
-                    <div className="text-xs text-slate-700 whitespace-pre-wrap leading-relaxed">
-                      {activeTicket.ticket.description || <span className="italic text-slate-400">No initial description provided.</span>}
-                    </div>
+                    <div 
+                      className="text-xs text-slate-700 leading-relaxed ProseMirror"
+                      dangerouslySetInnerHTML={{ __html: activeTicket.ticket.description || '<span class="italic text-slate-400">No initial description provided.</span>' }}
+                    />
                   </div>
 
                   <div className="w-full flex items-center justify-center my-2 shrink-0">
@@ -412,15 +415,16 @@ export default function UserSupportPage() {
                             )}
                           </div>
 
-                          <div className={`p-3 rounded-2xl text-xs whitespace-pre-wrap leading-relaxed shadow-sm ${
-                            isMe 
-                              ? 'bg-slate-900 text-white rounded-tr-none' 
-                              : isSupport
-                                ? 'bg-indigo-50 text-indigo-900 border border-indigo-100 rounded-tl-none'
-                                : 'bg-white text-slate-800 border border-slate-100 rounded-tl-none'
-                          }`}>
-                            {msg.message}
-                          </div>
+                          <div 
+                            className={`p-3 rounded-2xl text-xs leading-relaxed shadow-sm ProseMirror ${
+                              isMe 
+                                ? 'bg-slate-900 text-white rounded-tr-none' 
+                                : isSupport
+                                  ? 'bg-indigo-50 text-indigo-900 border border-indigo-100 rounded-tl-none'
+                                  : 'bg-white text-slate-800 border border-slate-100 rounded-tl-none'
+                            }`}
+                            dangerouslySetInnerHTML={{ __html: msg.message }}
+                          />
 
                           <span className="text-xxxs text-slate-400 font-mono mt-1 px-1">
                             {new Date(msg.created_at).toLocaleTimeString(undefined, {
@@ -437,18 +441,13 @@ export default function UserSupportPage() {
 
                 {/* Chat Message Input Bar */}
                 <div className="p-4 bg-white border-t border-slate-100 shrink-0">
-                  <form onSubmit={handleSendMessage} className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder={activeTicket.ticket.status === 'closed' ? 'Ticket is closed. Type here to reopen and respond...' : 'Type message here...'}
-                      value={replyMessage}
-                      onChange={(e) => setReplyMessage(e.target.value)}
-                      disabled={submittingMessage}
-                      className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:bg-white focus:ring-2 focus:ring-slate-500/20 focus:border-slate-500 outline-none transition"
-                    />
+                  <form onSubmit={handleSendMessage} className="flex gap-2 items-end">
+                    <div className="flex-1">
+                      <RichTextEditor value={replyMessage} onChange={setReplyMessage} />
+                    </div>
                     <button
                       type="submit"
-                      disabled={submittingMessage || !replyMessage.trim()}
+                      disabled={submittingMessage || !(replyMessage && replyMessage.replace(/<[^>]*>/g, '').trim())}
                       className="px-4 py-2.5 bg-slate-900 hover:bg-slate-850 text-white rounded-xl text-sm font-semibold transition cursor-pointer flex items-center justify-center shrink-0 disabled:opacity-40"
                     >
                       {submittingMessage ? (
@@ -536,13 +535,7 @@ export default function UserSupportPage() {
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-bold text-slate-700 uppercase">Detailed Description</label>
-                <textarea
-                  rows={4}
-                  placeholder="Describe your issue in detail. Include order numbers or transaction codes if applicable."
-                  value={newDescription}
-                  onChange={(e) => setNewDescription(e.target.value)}
-                  className="px-3.5 py-2.5 bg-slate-50 border border-slate-205 rounded-xl text-slate-805 text-xs focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition resize-none"
-                />
+                <RichTextEditor value={newDescription} onChange={setNewDescription} />
               </div>
 
               <div className="flex justify-end gap-2 border-t border-slate-100 pt-4 mt-2">

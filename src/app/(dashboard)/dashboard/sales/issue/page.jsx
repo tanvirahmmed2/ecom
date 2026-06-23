@@ -3,6 +3,7 @@ import React, { useContext, useEffect, useState } from 'react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import { Context } from '@/component/helper/Context'
+import RichTextEditor from '@/component/helper/RichTextEditor'
 import { 
   BiMessageSquareDetail, 
   BiSend, 
@@ -57,7 +58,8 @@ export default function SalesReportIssuePage() {
       toast.error('Please select a recipient')
       return
     }
-    if (!title.trim() || !message.trim()) {
+    const cleanMsg = message ? message.replace(/<[^>]*>/g, '').trim() : '';
+    if (!title.trim() || !cleanMsg) {
       toast.error('Please fill in all fields')
       return
     }
@@ -166,14 +168,7 @@ export default function SalesReportIssuePage() {
               {/* Message */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold text-slate-700">Message Description <span className="text-red-500">*</span></label>
-                <textarea
-                  required
-                  rows={4}
-                  placeholder="Provide complete details about the notification..."
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  className="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-850 text-sm focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition resize-none"
-                />
+                <RichTextEditor value={message} onChange={setMessage} />
               </div>
 
               {/* Submit */}
@@ -271,9 +266,10 @@ export default function SalesReportIssuePage() {
                         {/* Collapsible Content */}
                         {isExpanded && (
                           <div className="px-4 pb-4 pt-1 border-t border-slate-100/50 bg-white flex flex-col gap-3">
-                            <p className="text-slate-650 text-xs leading-relaxed whitespace-pre-wrap">
-                              {issue.message}
-                            </p>
+                            <div 
+                               className="text-slate-650 text-xs leading-relaxed ProseMirror"
+                               dangerouslySetInnerHTML={{ __html: issue.message }}
+                             />
                             
                             <div className="flex justify-between items-center border-t border-slate-50 pt-2.5 mt-1">
                               <span className="text-xxs text-slate-400 font-mono">Message Log ID: #{issue.issue_id}</span>

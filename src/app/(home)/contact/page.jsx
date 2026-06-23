@@ -3,6 +3,7 @@ import React, { useState, useContext } from 'react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import { Context } from '@/component/helper/Context'
+import RichTextEditor from '@/component/helper/RichTextEditor'
 import { 
   BiEnvelope, 
   BiPhoneCall, 
@@ -22,7 +23,8 @@ export default function ContactPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!name.trim() || !email.trim() || !subject.trim() || !message.trim()) {
+    const cleanMsg = message ? message.replace(/<[^>]*>/g, '').trim() : '';
+    if (!name.trim() || !email.trim() || !subject.trim() || !cleanMsg) {
       toast.error('Please fill in all required fields.')
       return
     }
@@ -189,14 +191,7 @@ export default function ContactPage() {
               {/* Message */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-bold text-slate-700 uppercase">Detailed Message <span className="text-red-500">*</span></label>
-                <textarea
-                  required
-                  rows={5}
-                  placeholder="Explain your inquiry in detail..."
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition resize-none"
-                />
+                <RichTextEditor value={message} onChange={setMessage} />
               </div>
 
               {/* Submit */}

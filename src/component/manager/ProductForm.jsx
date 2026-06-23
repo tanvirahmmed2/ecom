@@ -4,6 +4,7 @@ import Link from 'next/link'
 import axios from 'axios'
 import { BiUpload, BiChevronLeft, BiLoaderAlt, BiPlus, BiTrash } from 'react-icons/bi'
 import BarScanner from '@/component/helper/BarScanner'
+import RichTextEditor from '@/component/helper/RichTextEditor'
 
 export default function ProductForm({ initialData, onSubmit, loading }) {
   const [name, setName] = useState('')
@@ -164,13 +165,7 @@ export default function ProductForm({ initialData, onSubmit, loading }) {
 
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-semibold text-slate-700">Description</label>
-            <textarea
-              placeholder="Provide a detailed product description..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={4}
-              className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition resize-none"
-            />
+            <RichTextEditor value={description} onChange={setDescription} />
           </div>
 
           <div className="grid grid-cols-2 gap-4">

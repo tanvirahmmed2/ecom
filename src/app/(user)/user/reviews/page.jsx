@@ -4,6 +4,7 @@ import axios from 'axios'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
 import { Context } from '@/component/helper/Context'
+import RichTextEditor from '@/component/helper/RichTextEditor'
 import { 
   BiStar, 
   BiLoaderAlt, 
@@ -74,10 +75,11 @@ export default function UserReviewsPage() {
 
     setSubmitting(true)
     try {
+      const cleanComment = comment && comment !== '<p></p>' ? comment.trim() : '';
       await axios.post('/api/review', {
         rating,
         title: title.trim(),
-        comment: comment.trim()
+        comment: cleanComment
       })
       toast.success('Review submitted! It will appear publicly once approved by moderation.')
       setTitle('')
@@ -208,14 +210,8 @@ export default function UserReviewsPage() {
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-slate-705 uppercase">Detailed Review Comment</label>
-                    <textarea
-                      rows={4}
-                      placeholder="Share details of your experience with us..."
-                      value={comment}
-                      onChange={(e) => setComment(e.target.value)}
-                      className="px-3.5 py-2.5 bg-slate-50 border border-slate-205 rounded-xl text-slate-800 text-xs focus:bg-white focus:ring-2 focus:ring-slate-500/20 focus:border-slate-500 outline-none transition resize-none"
-                    />
+                    <label className="text-xs font-bold text-slate-755 uppercase">Detailed Review Comment</label>
+                    <RichTextEditor value={comment} onChange={setComment} />
                   </div>
 
                   <button
@@ -279,9 +275,10 @@ export default function UserReviewsPage() {
                       </div>
 
                       {rev.comment && (
-                        <p className="text-slate-655 text-xs whitespace-pre-wrap leading-relaxed italic bg-white p-3 rounded-lg border border-slate-100/50 mt-1">
-                          "{rev.comment}"
-                        </p>
+                        <div 
+                          className="text-slate-655 text-xs leading-relaxed italic bg-white p-3 rounded-lg border border-slate-100/50 mt-1 ProseMirror"
+                          dangerouslySetInnerHTML={{ __html: rev.comment }}
+                        />
                       )}
 
                       <div className="flex justify-between items-center text-xxxs text-slate-400 font-mono mt-1 pt-1 border-t border-slate-100/40">
