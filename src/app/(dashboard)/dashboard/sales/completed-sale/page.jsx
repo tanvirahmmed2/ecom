@@ -120,6 +120,14 @@ export default function CompletedSalesPage() {
                         <BiMap className="text-sm text-slate-500 mt-0.5 shrink-0" /> {order.shipping_address}
                       </span>
                     </div>
+                    {order.courier_name && (
+                      <div className="flex flex-col gap-1 col-span-1 md:col-span-3 border-t border-slate-200/40 pt-2 mt-1">
+                        <span className="font-bold text-slate-455 uppercase tracking-wide">Courier Dispatch Details</span>
+                        <span className="font-semibold text-slate-800">
+                          {order.courier_name} {order.courier_tracking_id ? ` (Tracking ID: ${order.courier_tracking_id})` : ''}
+                        </span>
+                      </div>
+                    )}
                     {order.note && (
                       <div className="flex flex-col gap-1 col-span-1 md:col-span-3 border-t border-slate-200/40 pt-2 mt-1">
                         <span className="font-bold text-slate-450 uppercase tracking-wide">Instruction Note</span>
@@ -174,15 +182,27 @@ export default function CompletedSalesPage() {
                       <span>Items Subtotal:</span>
                       <span className="font-semibold text-slate-800">৳{parseFloat(order.subtotal_amount).toFixed(2)}</span>
                     </div>
+                    {parseFloat(order.total_discount_amount) > 0 && (
+                      <div className="flex justify-between items-center lg:justify-end lg:gap-3 text-rose-500">
+                        <span>Discount:</span>
+                        <span className="font-semibold">-৳{parseFloat(order.total_discount_amount).toFixed(2)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between items-center lg:justify-end lg:gap-3">
                       <span>Delivery Charge:</span>
                       <span className="font-semibold text-slate-800">৳{parseFloat(order.delivery_charge).toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between items-center lg:justify-end lg:gap-3 border-t border-slate-100 pt-2 text-sm font-black text-slate-800">
+                    <div className="flex justify-between items-center lg:justify-end lg:gap-3 border-t border-slate-100 pt-2 text-sm font-bold text-slate-800">
                       <span>Total Invoice:</span>
-                      <span className="text-base text-slate-900" style={{ color: themeColor }}>
-                        ৳{parseFloat(order.total_amount).toFixed(2)}
-                      </span>
+                      <span className="font-bold text-slate-900">৳{parseFloat(order.total_amount).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center lg:justify-end lg:gap-3 text-[11px]">
+                      <span>Paid Amount:</span>
+                      <span className="font-bold text-emerald-600">৳{(parseFloat(order.total_amount) - parseFloat(order.due_amount)).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center lg:justify-end lg:gap-3 text-[11px]">
+                      <span>Due Amount:</span>
+                      <span className="font-bold text-rose-600">৳{parseFloat(order.due_amount).toFixed(2)}</span>
                     </div>
                   </div>
 

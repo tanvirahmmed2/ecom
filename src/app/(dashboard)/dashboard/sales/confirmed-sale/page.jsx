@@ -22,6 +22,16 @@ export default function ConfirmedSalesPage() {
 
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
+  const [courierNames, setCourierNames] = useState({})
+  const [courierTrackingIds, setCourierTrackingIds] = useState({})
+
+  const handleCourierChange = (orderId, field, value) => {
+    if (field === 'name') {
+      setCourierNames(prev => ({ ...prev, [orderId]: value }))
+    } else {
+      setCourierTrackingIds(prev => ({ ...prev, [orderId]: value }))
+    }
+  }
 
   const fetchConfirmedOrders = async () => {
     setLoading(true)
@@ -46,7 +56,12 @@ export default function ConfirmedSalesPage() {
 
     const toastId = toast.loading(`Updating order #${orderId} status...`)
     try {
-      await axios.put(`/api/sale/${orderId}`, { status: newStatus })
+      const payload = { status: newStatus }
+      if (newStatus === 'out_for_delivery') {
+        payload.courier_name = courierNames[orderId] || '';
+        payload.courier_tracking_id = courierTrackingIds[orderId] || '';
+      }
+      await axios.put(`/api/sale/${orderId}`, payload)
       toast.success(`Order #${orderId} status changed to ${newStatus}`, { id: toastId })
       fetchConfirmedOrders()
     } catch (err) {
@@ -145,6 +160,26 @@ export default function ConfirmedSalesPage() {
                         </span>
                       </div>
                     )}
+                    {/* Courier input fields */}
+                    <div className="flex flex-col gap-2 col-span-1 md:col-span-3 border-t border-slate-200/40 pt-2 mt-1">
+                      <span className="font-bold text-slate-455 uppercase tracking-wide">Courier Dispatch Info</span>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          placeholder="Courier Partner Name (e.g. Pathao, RedX)"
+                          value={courierNames[order.order_id] || order.courier_name || ''}
+                          onChange={(e) => handleCourierChange(order.order_id, 'name', e.target.value)}
+                          className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 outline-none font-medium text-slate-800 focus:border-slate-450"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Tracking ID or Reference Number"
+                          value={courierTrackingIds[order.order_id] || order.courier_tracking_id || ''}
+                          onChange={(e) => handleCourierChange(order.order_id, 'tracking', e.target.value)}
+                          className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 outline-none font-medium text-slate-800 focus:border-slate-450"
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   {/* Order Items Table */}
@@ -191,15 +226,27 @@ export default function ConfirmedSalesPage() {
                       <span>Items Subtotal:</span>
                       <span className="font-semibold text-slate-800">৳{parseFloat(order.subtotal_amount).toFixed(2)}</span>
                     </div>
+                    {parseFloat(order.total_discount_amount) > 0 && (
+                      <div className="flex justify-between items-center lg:justify-end lg:gap-3 text-rose-500">
+                        <span>Discount:</span>
+                        <span className="font-semibold">-৳{parseFloat(order.total_discount_amount).toFixed(2)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between items-center lg:justify-end lg:gap-3">
                       <span>Delivery Charge:</span>
                       <span className="font-semibold text-slate-800">৳{parseFloat(order.delivery_charge).toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between items-center lg:justify-end lg:gap-3 border-t border-slate-100 pt-2 text-sm font-black text-slate-800">
+                    <div className="flex justify-between items-center lg:justify-end lg:gap-3 border-t border-slate-100 pt-2 text-sm font-bold text-slate-800">
                       <span>Total Invoice:</span>
-                      <span className="text-base text-slate-900" style={{ color: themeColor }}>
-                        ৳{parseFloat(order.total_amount).toFixed(2)}
-                      </span>
+                      <span className="font-bold text-slate-900">৳{parseFloat(order.total_amount).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center lg:justify-end lg:gap-3 text-[11px]">
+                      <span>Paid Amount:</span>
+                      <span className="font-bold text-emerald-600">৳{(parseFloat(order.total_amount) - parseFloat(order.due_amount)).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center lg:justify-end lg:gap-3 text-[11px]">
+                      <span>Due Amount:</span>
+                      <span className="font-bold text-rose-600">৳{parseFloat(order.due_amount).toFixed(2)}</span>
                     </div>
                   </div>
 

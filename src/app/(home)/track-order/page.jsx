@@ -217,6 +217,14 @@ export default function TrackOrderPage() {
                   <BiSolidMap className="text-sm text-slate-500 mt-0.5 shrink-0" /> {order.shipping_address}, {order.shipping_city} {order.shipping_area ? `(${order.shipping_area})` : ''}
                 </span>
               </div>
+              {order.courier_name && (
+                <div className="flex flex-col gap-1 border-t border-slate-200/40 pt-2.5 mt-1">
+                  <span className="font-bold text-slate-400 uppercase tracking-wide">Courier Dispatch Details</span>
+                  <span className="font-semibold text-slate-800">
+                    {order.courier_name} {order.courier_tracking_id ? ` (Tracking ID: ${order.courier_tracking_id})` : ''}
+                  </span>
+                </div>
+              )}
               {order.note && (
                 <div className="flex flex-col gap-1 border-t border-slate-200/40 pt-2.5 mt-1">
                   <span className="font-bold text-slate-400 uppercase tracking-wide">Delivery Note</span>
@@ -259,15 +267,27 @@ export default function TrackOrderPage() {
                 <span>Items Subtotal:</span>
                 <span className="font-bold text-slate-800">৳{parseFloat(order.subtotal_amount).toFixed(2)}</span>
               </div>
+              {parseFloat(order.total_discount_amount) > 0 && (
+                <div className="flex justify-between items-center w-full max-w-xs text-rose-500">
+                  <span>Discount:</span>
+                  <span className="font-bold">-৳{parseFloat(order.total_discount_amount).toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between items-center w-full max-w-xs text-slate-500">
                 <span>Delivery Charge:</span>
                 <span className="font-bold text-slate-800">৳{parseFloat(order.delivery_charge).toFixed(2)}</span>
               </div>
-              <div className="flex justify-between items-center w-full max-w-xs text-slate-800 border-t border-slate-100 pt-2 text-sm font-black">
-                <span>Total Amount:</span>
-                <span className="text-base font-black" style={{ color: themeColor }}>
-                  ৳{parseFloat(order.total_amount).toFixed(2)}
-                </span>
+              <div className="flex justify-between items-center w-full max-w-xs text-slate-800 border-t border-slate-100 pt-2 text-sm font-bold">
+                <span>Total Invoice:</span>
+                <span className="font-bold">৳{parseFloat(order.total_amount).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center w-full max-w-xs text-slate-500 text-xs">
+                <span>Paid Amount:</span>
+                <span className="font-bold text-emerald-600">৳{(parseFloat(order.total_amount) - parseFloat(order.due_amount)).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center w-full max-w-xs text-slate-500 text-xs">
+                <span>Due Amount:</span>
+                <span className="font-bold text-rose-600">৳{parseFloat(order.due_amount).toFixed(2)}</span>
               </div>
             </div>
 
