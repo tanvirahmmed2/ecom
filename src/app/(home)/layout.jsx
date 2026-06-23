@@ -7,7 +7,7 @@ import React from 'react'
 
 const HomeLayout = ({children}) => {
   return (
-    <div className='w-full overflow-x-hidden relative pt-14'>
+    <div className='w-full overflow-x-hidden relative pt-14 md:pt-28'>
         <div className='w-full fixed z-50 top-0 min-h-14'>
             <Navbar/>
             <Categorybar/>

@@ -14,13 +14,43 @@ function slugify(text) {
 
 export async function GET(req) {
   try {
-    const result = await query(`
+    let sql = `
       SELECT p.*, c.name AS category_name, b.name AS brand_name 
       FROM products p
       LEFT JOIN categories c ON p.category_id = c.category_id
       LEFT JOIN brands b ON p.brand_id = b.brand_id
-      ORDER BY p.product_id DESC
-    `);
+    `;
+    let params = [];
+
+    const url = new URL(req.url);
+    const category = url.searchParams.get('category');
+
+    if (category) {
+      const isNumeric = /^\d+$/.test(category);
+      const catRes = await query(
+        isNumeric 
+          ? 'SELECT category_id FROM categories WHERE category_id = $1' 
+          : 'SELECT category_id FROM categories WHERE slug = $1',
+        [isNumeric ? parseInt(category, 10) : category]
+      );
+      
+      if (catRes.rows.length > 0) {
+        const targetId = catRes.rows[0].category_id;
+        const subcatsRes = await query(
+          'SELECT category_id FROM categories WHERE parent_id = $1 OR category_id = $1',
+          [targetId]
+        );
+        const categoryIds = subcatsRes.rows.map(r => r.category_id);
+        
+        sql += ` WHERE p.category_id = ANY($1::int[])`;
+        params.push(categoryIds);
+      } else {
+        sql += ` WHERE 1=0`;
+      }
+    }
+
+    sql += ` ORDER BY p.product_id DESC`;
+    const result = await query(sql, params);
     return Response.json(result.rows, { status: 200 });
   } catch (error) {
     console.error('Error fetching products:', error);

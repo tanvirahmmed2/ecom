@@ -55,6 +55,7 @@ const Dashboardsidebar = () => {
       { name: 'Customers', path: '/dashboard/manager/customers', icon: <BiUser /> },
       { name: 'Support Tickets', path: '/dashboard/manager/support', icon: <BiMessageSquareDetail /> },
       { name: 'Contact Messages', path: '/dashboard/manager/contact', icon: <BiMessageSquareDetail /> },
+      { name: 'Reviews', path: '/dashboard/manager/reviews', icon: <BiUserVoice /> },
       { name: 'Payments', path: '/dashboard/manager/payments', icon: <BiDollarCircle /> },
       { name: 'Returns', path: '/dashboard/manager/return', icon: <BiArrowBack /> },
       { name: 'Reports', path: '/dashboard/manager/report', icon: <BiFile /> },

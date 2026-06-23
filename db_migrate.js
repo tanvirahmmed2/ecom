@@ -75,6 +75,32 @@ async function migrate() {
     `);
 
     console.log("Issues table and issues_view created successfully!");
+
+    // Alter contacts table to add status column
+    await pool.query(`
+      ALTER TABLE contacts ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'replied'));
+    `);
+    console.log("Contacts table altered successfully to add status column!");
+
+    // Create websites table if not exists
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS websites (
+        website_id SERIAL PRIMARY KEY,
+        logo_url TEXT,
+        theme_color TEXT,
+        hero_title TEXT,
+        hero_subtitle TEXT,
+        name TEXT,
+        address TEXT,
+        tagline TEXT,
+        sociallink TEXT,
+        email TEXT,
+        phone TEXT,
+        created_at TIMESTAMP DEFAULT now(),
+        updated_at TIMESTAMP DEFAULT now()
+      );
+    `);
+    console.log("Websites table created successfully!");
   } catch (err) {
     console.error("Migration failed:", err);
   } finally {

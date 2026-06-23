@@ -291,4 +291,23 @@ SELECT
   i.created_at
 FROM issues i
 LEFT JOIN users s ON i.sender_id = s.user_id
-LEFT JOIN users r ON i.receiver_id = r.user_id;
+LEFT JOIN users r ON i.receiver_id = r.user_id;
+
+CREATE TABLE websites (
+  website_id SERIAL PRIMARY KEY,
+  logo_url TEXT,
+  theme_color TEXT,
+
+  hero_title TEXT,
+  hero_subtitle TEXT,
+
+  name TEXT,
+  address TEXT,
+  tagline TEXT,
+  sociallink TEXT,
+  email TEXT,
+  phone TEXT,
+
+  created_at TIMESTAMP DEFAULT now(),
+  updated_at TIMESTAMP DEFAULT now()
+);

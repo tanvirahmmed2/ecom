@@ -6,33 +6,9 @@ import axios from "axios";
 export const Context = createContext()
 
 
-const catg = [
-    {
-        id: 1,
-        category: 'Phone',
-        subcategory: [
-            "Samsung", 'Apple', 'Symphony'
-        ]
-    },
-    {
-        id: 2,
-        category: 'Laptop',
-        subcategory: [
-            'Hp', 'Dell', 'Lenevo'
-        ]
-    },
-    {
-        id: 3,
-        category: 'Camera',
-        subcategory: [
-            'Canon', 'Nikon'
-        ]
-    }
-]
-
 const ContextProvider = ({ children }) => {
 
-    const [categories, setCategories] = useState(catg)
+    const [categories, setCategories] = useState([])
     const [user, setUser] = useState(null)
     const [loading, setLoading] = useState(true)
 
@@ -42,6 +18,45 @@ const ContextProvider = ({ children }) => {
     const [cartbar, setCartbar]=useState(false)
     const [userSidebar, setUserSidebar]=useState(false)
     const [dashSidebar, setDashSidebar]=useState(false)
+    const [website, setWebsite] = useState(null)
+
+    const fetchWebsite = async () => {
+        try {
+            const res = await axios.get('/api/settings');
+            if (res.data && res.data.website_id) {
+                setWebsite(res.data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch website settings:", error);
+        }
+    };
+
+    const fetchCategories = async () => {
+        try {
+            const res = await axios.get('/api/category');
+            if (res.data && Array.isArray(res.data)) {
+                const parents = res.data.filter(c => c.parent_id === null);
+                const nested = parents.map(parent => {
+                    const children = res.data.filter(c => c.parent_id === parent.category_id);
+                    return {
+                        id: parent.category_id,
+                        category: parent.name,
+                        slug: parent.slug,
+                        image: parent.image,
+                        subcategory: children.map(child => ({
+                            id: child.category_id,
+                            name: child.name,
+                            slug: child.slug,
+                            image: child.image
+                        }))
+                    };
+                });
+                setCategories(nested);
+            }
+        } catch (error) {
+            console.error("Failed to fetch categories:", error);
+        }
+    };
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -57,6 +72,8 @@ const ContextProvider = ({ children }) => {
             }
         };
         fetchUser();
+        fetchWebsite();
+        fetchCategories();
     }, []);
 
     const logout = async () => {
@@ -73,8 +90,8 @@ const ContextProvider = ({ children }) => {
     const contextValue = {
         categories,cart, setCart,
         cartbar, setCartbar,userSidebar, setUserSidebar,dashSidebar, setDashSidebar,
-        user, setUser, loading, logout
-
+        user, setUser, loading, logout,
+        website, fetchWebsite
     }
     return (
         <Context.Provider value={contextValue}>

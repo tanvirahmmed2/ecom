@@ -9,7 +9,7 @@ import { Context } from '../helper/Context';
 const Navbar = () => {
     const [lastScroll, setLastScroll] = useState(0)
     const [showNavbar, setShowNavbar] = useState(true)
-    const { cartbar, setCartbar, user, loading, logout } = useContext(Context)
+    const { cartbar, setCartbar, user, loading, logout, website } = useContext(Context)
 
     const [searchValue, setSearchValue] = useState(null)
 
@@ -36,11 +36,23 @@ const Navbar = () => {
 
     return (
         <nav className={` w-full h-14 bg-slate-900 transition-transform duration-300 ${showNavbar ? 'flex' : 'hidden'} flex-row items-center justify-around text-white`}  >
-            <Link href={'/'} className='text-xl font-semibold'>Ecom</Link>
+            <Link href={'/'} className='flex items-center gap-2 text-xl font-bold hover:opacity-90 transition'>
+                {website?.logo_url ? (
+                    <img src={website.logo_url} alt={website.name || 'Ecom'} className="h-8 w-auto object-contain max-w-[120px]" />
+                ) : (
+                    <span>{website?.name || 'Ecom'}</span>
+                )}
+            </Link>
 
             <div className='w-auto flex flex-row items-center justify-center h-10 rounded-xl bg-white overflow-hidden'>
                 <input type="text" onChange={(e) => setSearchValue(e.target.value)} className='outline-none w-full p-2 text-black' />
-                <Link href={`/search?v=${searchValue}`} className='w-auto bg-red-600 text-white p-2 flex items-center justify-center h-12'><FiSearch /></Link>
+                <Link 
+                    href={`/search?v=${searchValue}`} 
+                    style={{ backgroundColor: website?.theme_color || '#dc2626' }}
+                    className='w-auto text-white p-2 flex items-center justify-center h-12 transition'
+                >
+                    <FiSearch />
+                </Link>
             </div>
 
             <div className='w-auto hidden md:flex flex-row items-center justify-center gap-4 h-14'>

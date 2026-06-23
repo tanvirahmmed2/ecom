@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { query } from '@/lib/db';
-import { hashPassword, verifyToken } from '@/lib/auth';
+import { hashPassword, verifyToken, authenticateUser } from '@/lib/auth';
 import { sendEmail } from '@/lib/mailer';
 import crypto from 'crypto';
 
@@ -73,6 +73,26 @@ export async function POST(req) {
 
     const newUser = result.rows[0];
 
+    // Create or update customer profile based on phone number
+    if (phone && phone.trim()) {
+      const cleanPhone = phone.trim();
+      const checkCust = await query('SELECT customer_id FROM customers WHERE phone = $1', [cleanPhone]);
+      if (checkCust.rows.length > 0) {
+        await query(
+          `UPDATE customers 
+           SET name = $1, email = $2 
+           WHERE phone = $3`,
+          [name.trim(), email.trim(), cleanPhone]
+        );
+      } else {
+        await query(
+          `INSERT INTO customers (name, email, phone) 
+           VALUES ($1, $2, $3)`,
+          [name.trim(), email.trim(), cleanPhone]
+        );
+      }
+    }
+
     // Send verification email via Brevo
     const verificationLink = `${NEXT_PUBLIC_API_URL}/verify-account?token=${verificationToken}`;
     const mailContent = `
@@ -108,6 +128,68 @@ export async function POST(req) {
     );
   } catch (error) {
     console.error('Registration error:', error);
+    return Response.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
+
+export async function PUT(req) {
+  try {
+    const auth = await authenticateUser();
+    if (!auth.success) {
+      return Response.json({ error: auth.message }, { status: 401 });
+    }
+
+    const { name, email, phone } = await req.json();
+
+    if (!name || !name.trim()) {
+      return Response.json({ error: 'Name is required' }, { status: 400 });
+    }
+    if (!email || !email.trim()) {
+      return Response.json({ error: 'Email is required' }, { status: 400 });
+    }
+
+    // Check if email is already taken by another user
+    const checkEmail = await query('SELECT user_id FROM users WHERE email = $1 AND user_id != $2', [email.trim(), auth.user.user_id]);
+    if (checkEmail.rows.length > 0) {
+      return Response.json({ error: 'Email address is already in use by another user' }, { status: 400 });
+    }
+
+    const cleanPhone = phone ? phone.trim() : null;
+
+    // Update user details
+    const result = await query(
+      `UPDATE users 
+       SET name = $1, email = $2, phone = $3, updated_at = NOW() 
+       WHERE user_id = $4 
+       RETURNING user_id, name, email, phone, role, is_active, is_varified, is_banned, created_at, updated_at`,
+      [name.trim(), email.trim(), cleanPhone, auth.user.user_id]
+    );
+
+    const updatedUser = result.rows[0];
+
+    // Synchronize customer profile
+    if (cleanPhone) {
+      const checkCust = await query('SELECT customer_id FROM customers WHERE phone = $1', [cleanPhone]);
+      if (checkCust.rows.length > 0) {
+        await query(
+          `UPDATE customers 
+           SET name = $1, email = $2 
+           WHERE phone = $3`,
+          [name.trim(), email.trim(), cleanPhone]
+        );
+      } else {
+        await query(
+          `INSERT INTO customers (name, email, phone) 
+           VALUES ($1, $2, $3)`,
+          [name.trim(), email.trim(), cleanPhone]
+        );
+      }
+    }
+
+    return Response.json({ message: 'Profile updated successfully', user: updatedUser }, { status: 200 });
+
+  } catch (error) {
+    console.error('Settings update error:', error);
     return Response.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
