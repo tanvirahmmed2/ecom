@@ -1,6 +1,7 @@
 import { query } from '@/lib/db';
 import { isManager } from '@/lib/auth';
 import { uploadToCloudinary, deleteFromCloudinary } from '@/lib/cloudinary';
+import { generateUniqueBarcode } from '@/lib/barcode';
 
 function slugify(text) {
   return text
@@ -73,11 +74,37 @@ export async function PUT(req, { params }) {
     const retail_price = formData.get('retail_price') ? parseFloat(formData.get('retail_price')) : 0;
 
     const unit = formData.get('unit') || '';
-    const barcode = formData.get('barcode') || '';
+    let barcode = formData.get('barcode') || '';
+
+    if (!barcode) {
+      barcode = await generateUniqueBarcode();
+    } else {
+      const checkBarcode = await query(
+        'SELECT product_id FROM products WHERE barcode = $1 AND product_id != $2',
+        [barcode, product.product_id]
+      );
+      if (checkBarcode.rows.length > 0) {
+        return Response.json({ error: 'Barcode already exists on another product. It must be unique.' }, { status: 400 });
+      }
+    }
+
     const isActiveVal = formData.get('is_active');
     const imageFile = formData.get('image');
 
+    const stock = formData.get('stock') ? parseInt(formData.get('stock'), 10) : 0;
     const variantsStr = formData.get('variants'); // JSON string array of { variant_name, price, stock }
+
+    let finalStock = stock;
+    if (variantsStr) {
+      try {
+        const variants = JSON.parse(variantsStr);
+        if (Array.isArray(variants) && variants.length > 0) {
+          finalStock = 0;
+        }
+      } catch (err) {
+        console.error('Error parsing variants:', err);
+      }
+    }
 
     if (!name) {
       return Response.json({ error: 'Product name is required' }, { status: 400 });
@@ -108,13 +135,13 @@ export async function PUT(req, { params }) {
        SET category_id = $1, brand_id = $2, name = $3, slug = $4, description = $5,
            purchase_price = $6, sale_price = $7, discount_price = $8, wholesale_price = $9,
            dealer_price = $10, retail_price = $11, image = $12, image_id = $13, unit = $14,
-           barcode = $15, is_active = $16, updated_at = NOW()
-       WHERE product_id = $17 
+           barcode = $15, stock = $16, is_active = $17, updated_at = NOW()
+       WHERE product_id = $18 
        RETURNING *`,
       [
         category_id, brand_id, name, slug, description,
         purchase_price, sale_price, discount_price, wholesale_price,
-        dealer_price, retail_price, imageUrl, imageId, unit, barcode, is_active,
+        dealer_price, retail_price, imageUrl, imageId, unit, barcode, finalStock, is_active,
         product.product_id
       ]
     );

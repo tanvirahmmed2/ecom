@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import axios from 'axios'
 import { BiUpload, BiChevronLeft, BiLoaderAlt, BiPlus, BiTrash } from 'react-icons/bi'
+import BarScanner from '@/component/helper/BarScanner'
 
 export default function ProductForm({ initialData, onSubmit, loading }) {
   const [name, setName] = useState('')
@@ -29,6 +30,7 @@ export default function ProductForm({ initialData, onSubmit, loading }) {
   const [newVarName, setNewVarName] = useState('')
   const [newVarPrice, setNewVarPrice] = useState(0)
   const [newVarStock, setNewVarStock] = useState(0)
+  const [stock, setStock] = useState(0)
 
   // Options lists
   const [categories, setCategories] = useState([])
@@ -49,6 +51,7 @@ export default function ProductForm({ initialData, onSubmit, loading }) {
       setRetailPrice(initialData.retail_price || 0)
       setUnit(initialData.unit || '')
       setBarcode(initialData.barcode || '')
+      setStock(initialData.stock || 0)
       setIsActive(initialData.is_active !== false)
       setImagePreview(initialData.image || '')
       setVariants(initialData.variants || [])
@@ -112,6 +115,7 @@ export default function ProductForm({ initialData, onSubmit, loading }) {
     formData.append('retail_price', retailPrice)
     formData.append('unit', unit)
     formData.append('barcode', barcode)
+    formData.append('stock', variants.length > 0 ? 0 : stock)
     formData.append('is_active', isActive)
     formData.append('variants', JSON.stringify(variants))
     
@@ -123,6 +127,7 @@ export default function ProductForm({ initialData, onSubmit, loading }) {
 
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-4xl bg-white rounded-2xl border border-slate-100 shadow-sm p-6 md:p-8 flex flex-col gap-8 animate-fade-in">
+      <BarScanner onScan={(scannedBarcode) => setBarcode(scannedBarcode)} />
       
       {/* Header */}
       <div className="flex items-center gap-4 pb-4 border-b border-slate-100">
@@ -350,9 +355,28 @@ export default function ProductForm({ initialData, onSubmit, loading }) {
                 placeholder="UPC-A/EAN barcode"
                 value={barcode}
                 onChange={(e) => setBarcode(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                  }
+                }}
                 className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition"
               />
             </div>
+
+            {variants.length === 0 && (
+              <div className="flex flex-col gap-1.5 col-span-2">
+                <label className="text-sm font-semibold text-slate-700">Stock Quantity</label>
+                <input
+                  type="number"
+                  required
+                  placeholder="e.g. 100"
+                  value={stock}
+                  onChange={(e) => setStock(parseInt(e.target.value, 10) || 0)}
+                  className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition"
+                />
+              </div>
+            )}
           </div>
 
           <div className="flex items-center justify-between bg-slate-50 p-4 rounded-xl border border-slate-200/60 mt-2">

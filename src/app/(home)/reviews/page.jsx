@@ -8,7 +8,7 @@ import {
   BiCommentDetail, 
   BiArrowBack,
   BiTrendingUp,
-  BiQuoteLeft
+  BiSolidQuoteLeft
 } from 'react-icons/bi'
 
 export default function ReviewsPage() {
@@ -127,7 +127,7 @@ export default function ReviewsPage() {
                     <div className="flex flex-col gap-3">
                       <div className="flex justify-between items-start">
                         {renderStars(rev.rating)}
-                        <BiQuoteLeft className="text-slate-200 text-2xl" />
+                        <BiSolidQuoteLeft className="text-slate-200 text-2xl" />
                       </div>
                       
                       <h3 className="font-bold text-slate-800 text-sm leading-snug">{rev.title}</h3>

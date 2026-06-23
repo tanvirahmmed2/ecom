@@ -105,13 +105,20 @@ export async function POST(req) {
         [purchaseId, prodId, varId, q, price]
       );
 
-      // Increment variant stock if variant is set
+      // Increment variant stock if variant is set, otherwise increment main product stock
       if (varId) {
         await query(
           `UPDATE product_variants 
            SET stock = stock + $1 
            WHERE variant_id = $2`,
           [q, varId]
+        );
+      } else {
+        await query(
+          `UPDATE products 
+           SET stock = COALESCE(stock, 0) + $1 
+           WHERE product_id = $2`,
+          [q, prodId]
         );
       }
 

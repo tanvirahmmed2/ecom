@@ -51,7 +51,7 @@ export default function ProductsCategoryPage() {
               <BiCategory />
             </div>
             <h3 className="font-bold text-slate-800">No categories found</h3>
-            <p className="text-sm text-slate-500">We couldn't load the shop categories at this moment.</p>
+            <p className="text-sm text-slate-500">We couldn`&apos;`t load the shop categories at this moment.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

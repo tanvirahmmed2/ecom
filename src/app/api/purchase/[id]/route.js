@@ -94,6 +94,13 @@ export async function DELETE(req, { params }) {
            WHERE variant_id = $2`,
           [item.quantity, item.variant_id]
         );
+      } else {
+        await query(
+          `UPDATE products 
+           SET stock = GREATEST(stock - $1, 0) 
+           WHERE product_id = $2`,
+          [item.quantity, item.product_id]
+        );
       }
     }
 

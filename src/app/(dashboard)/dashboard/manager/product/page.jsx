@@ -180,7 +180,7 @@ export default function DashboardManagerProductPage() {
                           <div>
                             <span className="font-bold text-slate-800 text-base block">{p.name}</span>
                             <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider mt-0.5 block">
-                              Unit: {p.unit || 'pcs'} | Barcode: {p.barcode || 'N/A'}
+                              Unit: {p.unit || 'pcs'} | Barcode: {p.barcode || 'N/A'} | Stock: {p.stock !== null && p.stock !== undefined ? p.stock : 0}
                             </span>
                           </div>
                         </div>

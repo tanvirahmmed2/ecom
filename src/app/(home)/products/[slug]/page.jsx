@@ -10,7 +10,7 @@ import {
   BiArrowBack, 
   BiLoaderAlt, 
   BiCheckShield, 
-  BiTruck, 
+  BiSolidTruck, 
   BiRevision 
 } from 'react-icons/bi'
 
@@ -79,8 +79,19 @@ export default function ProductDetailPage() {
         : parseFloat(product.sale_price))
 
   const hasDiscount = !selectedVariant && product.discount_price && parseFloat(product.discount_price) > 0
+  const currentStock = selectedVariant 
+    ? parseInt(selectedVariant.stock, 10) 
+    : parseInt(product.stock, 10) || 0
 
   const handleAddToCart = () => {
+    if (currentStock <= 0) {
+      toast.error('This item is currently out of stock')
+      return
+    }
+    if (quantity > currentStock) {
+      toast.error(`Cannot add more than ${currentStock} items to cart`)
+      return
+    }
     // Add to Context Cart
     const cartItem = {
       product_id: product.product_id,
@@ -99,6 +110,11 @@ export default function ProductDetailPage() {
       )
 
       if (existingIdx > -1) {
+        // Also check if combined quantity exceeds stock
+        if (items[existingIdx].quantity + quantity > currentStock) {
+          toast.error(`Cannot add more than ${currentStock} items to cart`)
+          return prev
+        }
         items[existingIdx].quantity += quantity
       } else {
         items.push(cartItem)
@@ -176,6 +192,14 @@ export default function ProductDetailPage() {
                   </span>
                 )}
               </div>
+              
+              {/* Stock Indicator */}
+              <div className="text-xs font-bold text-slate-500 flex items-center gap-1.5 mt-2 border-t border-slate-200/60 pt-2">
+                <span>Availability:</span>
+                <span className={currentStock > 0 ? 'text-emerald-600' : 'text-rose-600'}>
+                  {currentStock > 0 ? `${currentStock} items left in stock` : 'Out of Stock'}
+                </span>
+              </div>
             </div>
 
             {/* Variants Selector */}
@@ -228,10 +252,11 @@ export default function ProductDetailPage() {
             <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-50">
               <button
                 onClick={handleAddToCart}
-                className="flex-1 py-4 px-6 bg-slate-900 hover:bg-emerald-605 text-white font-bold text-sm rounded-2xl shadow-lg transition flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
-                style={{ backgroundColor: themeColor }}
+                disabled={currentStock <= 0}
+                className="flex-1 py-4 px-6 bg-slate-900 text-white font-bold text-sm rounded-2xl shadow-lg transition flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-400"
+                style={currentStock > 0 ? { backgroundColor: themeColor } : {}}
               >
-                <BiCart className="text-xl" /> Add to Cart
+                <BiCart className="text-xl" /> {currentStock > 0 ? 'Add to Cart' : 'Out of Stock'}
               </button>
             </div>
 
@@ -242,7 +267,7 @@ export default function ProductDetailPage() {
                 <span>Secure Checkout</span>
               </div>
               <div className="flex flex-col items-center gap-1 p-2.5 bg-slate-50 rounded-xl border border-slate-100">
-                <BiTruck className="text-lg text-emerald-600" />
+                <BiSolidTruck className="text-lg text-emerald-600" />
                 <span>Express Delivery</span>
               </div>
               <div className="flex flex-col items-center gap-1 p-2.5 bg-slate-50 rounded-xl border border-slate-100">

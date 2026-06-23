@@ -82,6 +82,12 @@ async function migrate() {
     `);
     console.log("Contacts table altered successfully to add status column!");
 
+    // Alter products table to add stock column
+    await pool.query(`
+      ALTER TABLE products ADD COLUMN IF NOT EXISTS stock INT DEFAULT 0;
+    `);
+    console.log("Products table altered successfully to add stock column!");
+
     // Create websites table if not exists
     await pool.query(`
       CREATE TABLE IF NOT EXISTS websites (

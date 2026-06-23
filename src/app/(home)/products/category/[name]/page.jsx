@@ -160,7 +160,7 @@ export default function ProductsCategorySlugPage() {
             alt={category.name}
             className="absolute inset-0 w-full h-full object-cover opacity-40"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-slate-950 via-slate-950/40 to-transparent" />
           
           <div className="relative p-8 md:p-10 flex flex-col gap-2">
             <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight">

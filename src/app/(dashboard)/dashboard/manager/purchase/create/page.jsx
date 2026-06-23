@@ -14,6 +14,7 @@ import {
   BiFile,
   BiUserPlus
 } from 'react-icons/bi'
+import BarScanner from '@/component/helper/BarScanner'
 
 export default function PurchaseCreatePage() {
   const { dashSidebar } = useContext(Context)
@@ -101,6 +102,54 @@ export default function PurchaseCreatePage() {
     }
   }
 
+  const handleBarcodeScan = async (scannedBarcode) => {
+    const matched = products.find(p => p.barcode === scannedBarcode);
+    if (!matched) {
+      toast.error(`No product found with barcode: ${scannedBarcode}`);
+      return;
+    }
+
+    toast.success(`Product scanned: ${matched.name}`);
+
+    try {
+      // Fetch details of product to get variants & base purchase price
+      const res = await axios.get(`/api/product/${matched.product_id}`);
+      const prod = res.data;
+      
+      const defaultVariantId = prod.variants && prod.variants.length > 0 ? prod.variants[0].variant_id : '';
+
+      // Check if product is already in our rows
+      const existingRowIndex = rows.findIndex(r => 
+        r.product_id === matched.product_id.toString() && 
+        (r.variant_id === defaultVariantId || (!r.variant_id && !defaultVariantId))
+      );
+
+      if (existingRowIndex > -1) {
+        // Increment quantity
+        const currentQty = parseInt(rows[existingRowIndex].quantity, 10) || 0;
+        updateRow(existingRowIndex, { quantity: currentQty + 1 });
+      } else {
+        const isFirstRowEmpty = rows.length === 1 && !rows[0].product_id;
+        const newRow = {
+          product_id: matched.product_id.toString(),
+          variants: prod.variants || [],
+          variant_id: defaultVariantId,
+          purchase_price: prod.purchase_price || 0,
+          quantity: 1
+        };
+
+        if (isFirstRowEmpty) {
+          setRows([newRow]);
+        } else {
+          setRows(prev => [...prev, newRow]);
+        }
+      }
+    } catch (err) {
+      toast.error('Failed to load scanned product details');
+      console.error(err);
+    }
+  };
+
   // Calculations
   const subtotal = rows.reduce((acc, row) => {
     const qty = parseInt(row.quantity, 10) || 0
@@ -183,6 +232,7 @@ export default function PurchaseCreatePage() {
 
   return (
     <div className={`w-full min-h-screen bg-slate-50 pt-20 pb-12 px-4 md:px-8 transition-all duration-300 ${dashSidebar ? 'lg:pl-68' : 'lg:pl-8'}`}>
+      <BarScanner onScan={handleBarcodeScan} />
       <div className="max-w-6xl mx-auto flex flex-col gap-6">
         
         {/* Header */}

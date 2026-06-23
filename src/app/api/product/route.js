@@ -1,6 +1,7 @@
 import { query } from '@/lib/db';
 import { isManager } from '@/lib/auth';
 import { uploadToCloudinary } from '@/lib/cloudinary';
+import { generateUniqueBarcode } from '@/lib/barcode';
 
 function slugify(text) {
   return text
@@ -79,11 +80,34 @@ export async function POST(req) {
     const retail_price = formData.get('retail_price') ? parseFloat(formData.get('retail_price')) : 0;
 
     const unit = formData.get('unit') || '';
-    const barcode = formData.get('barcode') || '';
+    let barcode = formData.get('barcode') || '';
+    
+    if (!barcode) {
+      barcode = await generateUniqueBarcode();
+    } else {
+      const checkBarcode = await query('SELECT product_id FROM products WHERE barcode = $1', [barcode]);
+      if (checkBarcode.rows.length > 0) {
+        return Response.json({ error: 'Barcode already exists. It must be unique.' }, { status: 400 });
+      }
+    }
+
     const isActiveVal = formData.get('is_active');
     const imageFile = formData.get('image');
 
+    const stock = formData.get('stock') ? parseInt(formData.get('stock'), 10) : 0;
     const variantsStr = formData.get('variants'); // JSON string array of { variant_name, price, stock }
+
+    let finalStock = stock;
+    if (variantsStr) {
+      try {
+        const variants = JSON.parse(variantsStr);
+        if (Array.isArray(variants) && variants.length > 0) {
+          finalStock = 0;
+        }
+      } catch (err) {
+        console.error('Error parsing variants:', err);
+      }
+    }
 
     if (!name) {
       return Response.json({ error: 'Product name is required' }, { status: 400 });
@@ -106,13 +130,13 @@ export async function POST(req) {
       `INSERT INTO products (
         category_id, brand_id, name, slug, description,
         purchase_price, sale_price, discount_price, wholesale_price,
-        dealer_price, retail_price, image, image_id, unit, barcode, is_active
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+        dealer_price, retail_price, image, image_id, unit, barcode, stock, is_active
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
        RETURNING *`,
       [
         category_id, brand_id, name, slug, description,
         purchase_price, sale_price, discount_price, wholesale_price,
-        dealer_price, retail_price, uploadResult.url, uploadResult.id, unit, barcode, is_active
+        dealer_price, retail_price, uploadResult.url, uploadResult.id, unit, barcode, finalStock, is_active
       ]
     );
 
