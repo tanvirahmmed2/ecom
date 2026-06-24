@@ -96,7 +96,7 @@ export default function ProductsCategorySlugPage() {
 
       const matchesMin = minPrice === '' || finalPrice >= parseFloat(minPrice)
       const matchesMax = maxPrice === '' || finalPrice <= parseFloat(maxPrice)
-      const matchesStock = !inStockOnly || (p.total_stock ? parseInt(p.total_stock, 10) > 0 : (parseInt(p.stock, 10) > 0))
+      const matchesStock = !inStockOnly || ((p.total_stock !== undefined ? parseInt(p.total_stock, 10) : parseInt(p.stock, 10)) > 0)
 
       return matchesSearch && matchesMin && matchesMax && matchesStock
     })

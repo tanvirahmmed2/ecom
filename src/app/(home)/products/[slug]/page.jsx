@@ -73,13 +73,19 @@ export default function ProductDetailPage() {
     )
   }
 
-  const hasDiscount = !selectedVariant && product.discount_price && parseFloat(product.discount_price) > 0
+  const hasDiscount = product.discount_price && parseFloat(product.discount_price) > 0
 
   const basePrice = selectedVariant 
-    ? parseFloat(selectedVariant.price) 
+    ? (hasDiscount
+        ? Math.max(0, (parseFloat(product.sale_price) + parseFloat(selectedVariant.price)) - parseFloat(product.discount_price))
+        : (parseFloat(product.sale_price) + parseFloat(selectedVariant.price)))
     : (hasDiscount
         ? Math.max(0, parseFloat(product.sale_price) - parseFloat(product.discount_price))
         : parseFloat(product.sale_price))
+
+  const originalPrice = selectedVariant
+    ? (parseFloat(product.sale_price) + parseFloat(selectedVariant.price))
+    : parseFloat(product.sale_price)
 
   const currentStock = selectedVariant 
     ? parseInt(selectedVariant.stock, 10) 
@@ -146,12 +152,12 @@ export default function ProductDetailPage() {
 
             {/* Pricing Section */}
             <div className="p-4 bg-slate-50 rounded-2xl flex flex-col gap-1 border border-slate-100">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Purchase Price</span>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Price</span>
               <div className="flex items-baseline gap-2">
                 <span className="text-2xl font-black text-slate-900">৳{basePrice.toFixed(2)}</span>
                 {hasDiscount && (
                   <span className="text-sm font-semibold text-slate-400 line-through">
-                    ৳{parseFloat(product.sale_price).toFixed(2)}
+                    ৳{originalPrice.toFixed(2)}
                   </span>
                 )}
               </div>
@@ -172,6 +178,8 @@ export default function ProductDetailPage() {
                 <div className="flex flex-wrap gap-2">
                   {product.variants.map((v) => {
                     const isSelected = selectedVariant?.variant_id === v.variant_id
+                    const variantBasePrice = parseFloat(product.sale_price) + parseFloat(v.price)
+                    const variantFinalPrice = hasDiscount ? Math.max(0, variantBasePrice - parseFloat(product.discount_price)) : variantBasePrice
                     return (
                       <button
                         key={v.variant_id}
@@ -183,7 +191,7 @@ export default function ProductDetailPage() {
                         }`}
                         style={isSelected ? { borderColor: themeColor, color: themeColor } : {}}
                       >
-                        {v.variant_name} (৳{parseFloat(v.price).toFixed(2)})
+                        {v.variant_name} (৳{variantFinalPrice.toFixed(2)})
                       </button>
                     )
                   })}

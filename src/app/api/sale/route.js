@@ -103,7 +103,7 @@ export async function POST(req) {
       if (item.variant_id) {
         // Variant item details lookup
         const varRes = await client.query(
-          `SELECT v.price, v.stock, p.name, p.product_id
+          `SELECT v.price, v.stock, p.name, p.product_id, p.sale_price, p.discount_price
            FROM product_variants v
            JOIN products p ON v.product_id = p.product_id
            WHERE v.variant_id = $1`,
@@ -116,13 +116,19 @@ export async function POST(req) {
         if (parseInt(dbVar.stock, 10) < item.quantity) {
           throw new Error(`Insufficient stock for variant "${dbVar.name}"`);
         }
-        const itemPrice = parseFloat(dbVar.price);
-        subtotal += itemPrice * item.quantity;
+        const salePrice = parseFloat(dbVar.sale_price);
+        const variantPrice = parseFloat(dbVar.price);
+        const discountAmt = parseFloat(dbVar.discount_price || 0);
+        const finalPrice = Math.max(0, (salePrice + variantPrice) - discountAmt);
+
+        subtotal += finalPrice * item.quantity;
+        totalDiscount += discountAmt * item.quantity;
+
         verifiedItems.push({
           product_id: dbVar.product_id,
           variant_id: item.variant_id,
           quantity: item.quantity,
-          price: itemPrice
+          price: finalPrice
         });
       } else {
         // Simple item details lookup

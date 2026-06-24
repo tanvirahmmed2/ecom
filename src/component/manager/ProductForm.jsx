@@ -103,6 +103,17 @@ export default function ProductForm({ initialData, onSubmit, loading }) {
 
   const handleSubmit = (e) => {
     e.preventDefault()
+
+    // Auto-append any un-added variant inputs if the variant name is filled
+    let finalVariants = [...variants]
+    if (newVarName.trim()) {
+      finalVariants.push({
+        variant_name: newVarName.trim(),
+        price: parseFloat(newVarPrice) || 0,
+        stock: parseInt(newVarStock, 10) || 0
+      })
+    }
+
     const formData = new FormData()
     formData.append('name', name)
     formData.append('description', description)
@@ -116,9 +127,9 @@ export default function ProductForm({ initialData, onSubmit, loading }) {
     formData.append('retail_price', retailPrice)
     formData.append('unit', unit)
     formData.append('barcode', barcode)
-    formData.append('stock', variants.length > 0 ? 0 : stock)
+    formData.append('stock', finalVariants.length > 0 ? 0 : stock)
     formData.append('is_active', isActive)
-    formData.append('variants', JSON.stringify(variants))
+    formData.append('variants', JSON.stringify(finalVariants))
     
     if (image) {
       formData.append('image', image)
@@ -402,7 +413,7 @@ export default function ProductForm({ initialData, onSubmit, loading }) {
         <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4">Product Variants</h3>
         
         {/* Form to add a new variant */}
-        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/60 flex flex-col md:flex-row items-end gap-4 mb-6">
+         <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/60 flex flex-col md:flex-row items-end gap-4 mb-6">
           <div className="flex-1 w-full flex flex-col gap-1.5">
             <label className="text-xs font-bold text-slate-600">Variant Name</label>
             <input
@@ -410,6 +421,12 @@ export default function ProductForm({ initialData, onSubmit, loading }) {
               placeholder="e.g. Red - XL or Blue - M"
               value={newVarName}
               onChange={(e) => setNewVarName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  addVariant();
+                }
+              }}
               className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-slate-800 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition"
             />
           </div>
@@ -420,6 +437,12 @@ export default function ProductForm({ initialData, onSubmit, loading }) {
               step="0.01"
               value={newVarPrice}
               onChange={(e) => setNewVarPrice(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  addVariant();
+                }
+              }}
               className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-slate-800 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition"
             />
           </div>
@@ -429,6 +452,12 @@ export default function ProductForm({ initialData, onSubmit, loading }) {
               type="number"
               value={newVarStock}
               onChange={(e) => setNewVarStock(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  addVariant();
+                }
+              }}
               className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-slate-800 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition"
             />
           </div>
@@ -457,7 +486,7 @@ export default function ProductForm({ initialData, onSubmit, loading }) {
                 {variants.map((v, index) => (
                   <tr key={index}>
                     <td className="px-4 py-3 font-medium">{v.variant_name}</td>
-                    <td className="px-4 py-3">${v.price.toFixed(2)}</td>
+                    <td className="px-4 py-3">৳{parseFloat(v.price).toFixed(2)}</td>
                     <td className="px-4 py-3">{v.stock} pcs</td>
                     <td className="px-4 py-3 text-right">
                       <button

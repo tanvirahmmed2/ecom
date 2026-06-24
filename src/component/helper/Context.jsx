@@ -35,45 +35,42 @@ const ContextProvider = ({ children }) => {
     }, [cart, cartInitialized])
 
     const addToCart = (product, variant = null, qty = 1) => {
-        setCart(prev => {
-            const items = [...prev.items]
-            const variantName = variant ? variant.variant_name : null
-            const variantId = variant ? variant.variant_id : null
-            const existingIdx = items.findIndex(item => 
-                item.product_id === product.product_id && 
-                item.variant === variantName
-            )
+        const items = [...cart.items]
+        const variantName = variant ? variant.variant_name : null
+        const variantId = variant ? variant.variant_id : null
+        const existingIdx = items.findIndex(item => 
+            item.product_id === product.product_id && 
+            item.variant === variantName
+        )
 
-            const maxStock = variant ? parseInt(variant.stock, 10) : parseInt(product.stock, 10) || 0
+        const maxStock = variant ? parseInt(variant.stock, 10) : parseInt(product.stock, 10) || 0
+        const currentQty = existingIdx > -1 ? items[existingIdx].quantity : 0
+        const newQty = currentQty + qty
 
-            if (existingIdx > -1) {
-                const newQty = items[existingIdx].quantity + qty
-                if (newQty > maxStock) {
-                    toast.error(`Cannot add more than ${maxStock} items to cart`)
-                    return prev
-                }
-                items[existingIdx].quantity = newQty
-            } else {
-                if (qty > maxStock) {
-                    toast.error(`Cannot add more than ${maxStock} items to cart`)
-                    return prev
-                }
-                items.push({
-                    product_id: product.product_id,
-                    name: product.name,
-                    image: product.image,
-                    sale_price: variant ? parseFloat(variant.price) : parseFloat(product.sale_price),
-                    discount_price: variant ? 0 : parseFloat(product.discount_price || 0),
-                    variant: variantName,
-                    variant_id: variantId,
-                    quantity: qty,
-                    slug: product.slug,
-                    max_stock: maxStock
-                })
-            }
-            toast.success(`${product.name} added to cart!`)
-            return { items }
-        })
+        if (newQty > maxStock) {
+            toast.error(`Cannot add more than ${maxStock} items to cart`)
+            return
+        }
+
+        if (existingIdx > -1) {
+            items[existingIdx].quantity = newQty
+        } else {
+            items.push({
+                product_id: product.product_id,
+                name: product.name,
+                image: product.image,
+                sale_price: variant ? parseFloat(product.sale_price) + parseFloat(variant.price) : parseFloat(product.sale_price),
+                discount_price: parseFloat(product.discount_price || 0),
+                variant: variantName,
+                variant_id: variantId,
+                quantity: qty,
+                slug: product.slug,
+                max_stock: maxStock
+            })
+        }
+
+        setCart({ items })
+        toast.success(`${product.name} added to cart!`)
         setCartbar(true)
     }
 
