@@ -9,9 +9,9 @@ const Menubar = () => {
 
     return (
         <div 
-            className="fixed bottom-6 left-4 right-4 z-50 md:hidden  shadow-white bg-slate-900/90 backdrop-blur-md h-14 rounded-2xl border border-slate-800 text-white flex flex-row items-center justify-around shadow-sm"
+            className="fixed bottom-6 left-4 right-4 z-50 md:hidden  shadow-white bg-emerald-600 backdrop-blur-md h-14 rounded-2xl text-white flex flex-row items-center justify-around shadow-sm"
         >
-            <Link href={'/offer'} className='hover:text-red-500 transition-colors font-medium text-sm'>Offer</Link>
+            <Link href={'/offers'} className='hover:text-red-500 transition-colors font-medium text-sm'>Offer</Link>
             <Link href={'/products'} className='hover:text-red-500 transition-colors font-medium text-sm'>Products</Link>
             <button 
                 onClick={() => setCartbar(!cartbar)} 
