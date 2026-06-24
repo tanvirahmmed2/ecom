@@ -53,11 +53,15 @@ export async function POST(req) {
       shipping_city,
       shipping_area,
       note,
-      items
+      items,
+      is_pos,
+      payment_type,
+      amount_received,
+      change_amount
     } = await req.json();
 
-    if (!phone || !shipping_address || !items || !Array.isArray(items) || items.length === 0) {
-      return Response.json({ error: 'Phone, shipping address, and items are required' }, { status: 400 });
+    if (!phone || (!is_pos && !shipping_address) || !items || !Array.isArray(items) || items.length === 0) {
+      return Response.json({ error: 'Phone and items are required' }, { status: 400 });
     }
 
     // Optional: Get logged in user if any
@@ -70,28 +74,55 @@ export async function POST(req) {
     // 1. Customer profile upsert
     let customerId = null;
     const cleanPhone = phone.trim();
-    const cleanName = name ? name.trim() : 'Guest Customer';
-    const cleanEmail = email ? email.trim() : null;
-    const cleanAddr = shipping_address.trim();
 
-    const checkCust = await client.query('SELECT customer_id FROM customers WHERE phone = $1', [cleanPhone]);
-    if (checkCust.rows.length > 0) {
-      customerId = checkCust.rows[0].customer_id;
-      // Update name/address/email if they were blank before or we have new values
-      await client.query(
-        `UPDATE customers 
-         SET name = COALESCE($1, name), email = COALESCE($2, email), address = COALESCE($3, address)
-         WHERE customer_id = $4`,
-        [cleanName, cleanEmail, cleanAddr, customerId]
-      );
+    if (is_pos) {
+      const checkCust = await client.query('SELECT customer_id FROM customers WHERE phone = $1 LIMIT 1', [cleanPhone]);
+      if (checkCust.rows.length > 0) {
+        customerId = checkCust.rows[0].customer_id;
+      } else {
+        // Customer profile not found. Check if a registered user exists with this phone number
+        const checkUser = await client.query('SELECT name, email FROM users WHERE phone = $1 LIMIT 1', [cleanPhone]);
+        
+        let finalName = 'Guest';
+        let finalEmail = 'guest@sale.com';
+        let finalAddr = 'In-Store POS';
+
+        if (checkUser.rows.length > 0) {
+          finalName = checkUser.rows[0].name || 'Guest';
+          finalEmail = checkUser.rows[0].email || 'guest@sale.com';
+        }
+
+        const newCust = await client.query(
+          `INSERT INTO customers (name, phone, email, address)
+           VALUES ($1, $2, $3, $4)
+           RETURNING customer_id`,
+          [finalName, cleanPhone, finalEmail, finalAddr]
+        );
+        customerId = newCust.rows[0].customer_id;
+      }
     } else {
-      const newCust = await client.query(
-        `INSERT INTO customers (name, phone, email, address)
-         VALUES ($1, $2, $3, $4)
-         RETURNING customer_id`,
-        [cleanName, cleanPhone, cleanEmail, cleanAddr]
-      );
-      customerId = newCust.rows[0].customer_id;
+      const cleanName = name ? name.trim() : 'Guest Customer';
+      const cleanEmail = email ? email.trim() : null;
+      const cleanAddr = shipping_address.trim();
+
+      const checkCust = await client.query('SELECT customer_id FROM customers WHERE phone = $1', [cleanPhone]);
+      if (checkCust.rows.length > 0) {
+        customerId = checkCust.rows[0].customer_id;
+        await client.query(
+          `UPDATE customers 
+           SET name = COALESCE($1, name), email = COALESCE($2, email), address = COALESCE($3, address)
+           WHERE customer_id = $4`,
+          [cleanName, cleanEmail, cleanAddr, customerId]
+        );
+      } else {
+        const newCust = await client.query(
+          `INSERT INTO customers (name, phone, email, address)
+           VALUES ($1, $2, $3, $4)
+           RETURNING customer_id`,
+          [cleanName, cleanPhone, cleanEmail, cleanAddr]
+        );
+        customerId = newCust.rows[0].customer_id;
+      }
     }
 
     // 2. Server-side price verification and stock checks
@@ -162,9 +193,9 @@ export async function POST(req) {
       }
     }
 
-    // Calculate delivery charge (70 BDT in Dhaka, 130 BDT everywhere else)
+    // Calculate delivery charge (70 BDT in Dhaka, 130 BDT everywhere else. POS is 0 BDT)
     const isDhaka = shipping_city && shipping_city.trim().toLowerCase() === 'dhaka';
-    const deliveryCharge = isDhaka ? 70 : 130;
+    const deliveryCharge = is_pos ? 0 : (isDhaka ? 70 : 130);
     const totalAmount = subtotal + deliveryCharge;
 
     // 3. Create order
@@ -173,30 +204,73 @@ export async function POST(req) {
         customer_id, phone, shipping_address, shipping_city, shipping_area,
         status, subtotal_amount, total_discount_amount, delivery_charge,
         total_amount, due_amount, payment_type, note
-      ) VALUES ($1, $2, $3, $4, $5, 'pending', $6, $7, $8, $9, $10, 'cod', $11)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
        RETURNING order_id`,
       [
         customerId,
         cleanPhone,
         cleanAddr,
-        shipping_city || 'Dhaka',
-        shipping_area || '',
+        is_pos ? 'In-Store' : (shipping_city || 'Dhaka'),
+        is_pos ? '' : (shipping_area || ''),
+        is_pos ? 'delivered' : 'pending',
         subtotal,
         totalDiscount,
         deliveryCharge,
         totalAmount,
-        totalAmount, // COD has full due amount until paid on delivery
+        is_pos ? 0 : totalAmount, // POS is fully paid (due = 0), COD has full due until delivery
+        is_pos ? (payment_type || 'cash') : 'cod',
         note || null
       ]
     );
     const orderId = orderRes.rows[0].order_id;
 
-    // 4. Create order items (DO NOT decrement stock here - only on confirm/delivery)
+    // 4. Create order items and decrement stock immediately if POS
     for (const vItem of verifiedItems) {
       await client.query(
         `INSERT INTO order_items (order_id, product_id, variant_id, quantity, price)
          VALUES ($1, $2, $3, $4, $5)`,
         [orderId, vItem.product_id, vItem.variant_id, vItem.quantity, vItem.price]
+      );
+
+      if (is_pos) {
+        if (vItem.variant_id) {
+          const updateRes = await client.query(
+            `UPDATE product_variants 
+             SET stock = stock - $1 
+             WHERE variant_id = $2
+             RETURNING stock, variant_name`,
+            [vItem.quantity, vItem.variant_id]
+          );
+          if (updateRes.rows.length > 0 && updateRes.rows[0].stock < 0) {
+            throw new Error(`Insufficient stock for variant "${updateRes.rows[0].variant_name}"`);
+          }
+        } else {
+          const updateRes = await client.query(
+            `UPDATE products 
+             SET stock = stock - $1 
+             WHERE product_id = $2
+             RETURNING stock, name`,
+            [vItem.quantity, vItem.product_id]
+          );
+          if (updateRes.rows.length > 0 && updateRes.rows[0].stock < 0) {
+            throw new Error(`Insufficient stock for product "${updateRes.rows[0].name}"`);
+          }
+        }
+      }
+    }
+
+    // 5. Create payment record
+    if (is_pos) {
+      await client.query(
+        `INSERT INTO public.payments (order_id, payment_method, amount, amount_received, change_amount, payment_status, note)
+         VALUES ($1, $2, $3, $4, $5, 'completed', 'POS sale completed in-store')`,
+        [orderId, payment_type || 'cash', totalAmount, amount_received || totalAmount, change_amount || 0]
+      );
+    } else {
+      await client.query(
+        `INSERT INTO public.payments (order_id, payment_method, amount, amount_received, change_amount, payment_status, note)
+         VALUES ($1, 'cod', $2, 0, 0, 'pending', 'Pending cash on delivery storefront order')`,
+        [orderId, totalAmount]
       );
     }
 
@@ -204,7 +278,7 @@ export async function POST(req) {
     await client.query('COMMIT');
 
     return Response.json({
-      message: 'Order placed successfully!',
+      message: 'POS Order placed successfully!',
       order_id: orderId,
       total_amount: totalAmount
     }, { status: 201 });
