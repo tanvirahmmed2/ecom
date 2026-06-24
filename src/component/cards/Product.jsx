@@ -66,7 +66,7 @@ export default function ProductCard({ product }) {
 
   return (
     <div className="group bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col overflow-hidden relative">
-      
+
       {/* Product Image Section */}
       <div className="relative aspect-square w-full overflow-hidden bg-slate-50 border-b border-slate-100">
         {hasDiscount && (
@@ -74,7 +74,7 @@ export default function ProductCard({ product }) {
             Sale
           </div>
         )}
-        
+
         <img
           src={image || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&auto=format&fit=crop&q=60'}
           alt={name}
@@ -155,7 +155,7 @@ export default function ProductCard({ product }) {
 
       {/* Dynamic Variant Selector Overlay */}
       {showVariants && (
-        <div 
+        <div
           className="absolute inset-0 bg-white/95 backdrop-blur-sm z-20 p-4 flex flex-col justify-between items-center transition-all duration-300"
           onClick={(e) => {
             e.preventDefault()
@@ -164,20 +164,20 @@ export default function ProductCard({ product }) {
         >
           <div className="w-full flex justify-between items-center border-b border-slate-100 pb-2">
             <span className="text-xs font-extrabold text-slate-800">Select Option</span>
-            <button 
+            <button
               onClick={() => setShowVariants(false)}
               className="text-xs text-slate-400 hover:text-slate-700 font-bold"
             >
               Cancel
             </button>
           </div>
-          
+
           <div className="flex-1 w-full overflow-y-auto my-3 flex flex-col gap-2 pr-1">
             {variants.map((v) => {
               const vPrice = parseFloat(sale_price) + parseFloat(v.price)
               const finalVPrice = hasDiscount ? Math.max(0, vPrice - parseFloat(discount_price || 0)) : vPrice
               const inStock = parseInt(v.stock, 10) > 0
-              
+
               return (
                 <button
                   key={v.variant_id}
@@ -188,11 +188,10 @@ export default function ProductCard({ product }) {
                     addToCart(product, v, 1)
                     setShowVariants(false)
                   }}
-                  className={`w-full py-2 px-3 border rounded-xl text-left text-xs font-bold transition flex items-center justify-between cursor-pointer ${
-                    inStock 
-                      ? 'border-slate-200 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-500 hover:text-emerald-700' 
+                  className={`w-full py-2 px-3 border rounded-xl text-left text-xs font-bold transition flex items-center justify-between cursor-pointer ${inStock
+                      ? 'border-slate-200 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-500 hover:text-emerald-700'
                       : 'border-slate-100 bg-slate-50 text-slate-400 cursor-not-allowed opacity-50'
-                  }`}
+                    }`}
                 >
                   <span className="truncate">{v.variant_name}</span>
                   <span className="shrink-0">
@@ -202,7 +201,7 @@ export default function ProductCard({ product }) {
               )
             })}
           </div>
-          
+
           <div className="text-[10px] text-slate-400 text-center font-medium">
             Choose a variant to add to cart
           </div>

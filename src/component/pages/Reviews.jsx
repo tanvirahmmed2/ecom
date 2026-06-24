@@ -42,7 +42,8 @@ const Reviews = () => {
 
   return (
     <div className="w-full py-12 bg-slate-50 border-b border-slate-100 overflow-hidden relative">
-      <style dangerouslySetInnerHTML={{__html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @keyframes scroll-reviews {
           0% { transform: translateX(0); }
           100% { transform: translateX(-33.33%); }
@@ -56,7 +57,7 @@ const Reviews = () => {
           animation-play-state: paused;
         }
       `}} />
-      
+
       <div className="max-w-6xl mx-auto px-4 md:px-8 mb-6">
         <span className="text-xs font-black uppercase tracking-widest text-emerald-600" style={{ color: themeColor }}>
           Testimonials

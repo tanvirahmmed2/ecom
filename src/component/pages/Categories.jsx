@@ -15,7 +15,8 @@ const Categories = () => {
 
   return (
     <div className="w-full py-12 bg-slate-50 border-b border-slate-100 overflow-hidden relative">
-      <style dangerouslySetInnerHTML={{__html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @keyframes scroll-categories {
           0% { transform: translateX(0); }
           100% { transform: translateX(-33.33%); }
@@ -29,7 +30,7 @@ const Categories = () => {
           animation-play-state: paused;
         }
       `}} />
-      
+
       <div className="max-w-6xl mx-auto px-4 md:px-8 mb-6">
         <span className="text-xs font-black uppercase tracking-widest text-emerald-600" style={{ color: themeColor }}>
           Departments
@@ -49,10 +50,10 @@ const Categories = () => {
               className="flex aspect-5/6 items-center flex-col gap-3 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-2xl p-2 max-w-50 transition-all hover:scale-[1.02] shadow-sm select-none cursor-pointer shrink-0"
             >
               <div className="w-full rounded-xl overflow-hidden bg-white border border-slate-100 flex items-center justify-center shrink-0">
-                <Image width={500} height={500} 
-                  src={cat.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100'} 
+                <Image width={500} height={500}
+                  src={cat.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100'}
                   alt={cat.category}
-                  className="w-full h-full object-cover aspect-square" 
+                  className="w-full h-full object-cover aspect-square"
                 />
               </div>
               <div className="flex flex-col min-w-0">

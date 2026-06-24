@@ -13,13 +13,13 @@ const Hero = () => {
 
   return (
     <div className="relative w-full bg-slate-950 py-24 md:py-36 px-4 md:px-8 overflow-hidden flex flex-col items-center text-center justify-center">
-      
+
       {/* Ambient background glows */}
-      <div 
+      <div
         className="absolute top-[-20%] left-[-20%] w-[50%] h-[50%] rounded-full blur-[120px] opacity-25 pointer-events-none"
         style={{ backgroundColor: themeColor }}
       />
-      <div 
+      <div
         className="absolute bottom-[-20%] right-[-20%] w-[50%] h-[50%] rounded-full blur-[120px] opacity-20 pointer-events-none"
         style={{ backgroundColor: themeColor }}
       />
@@ -28,9 +28,9 @@ const Hero = () => {
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none" />
 
       <div className="max-w-4xl mx-auto flex flex-col items-center gap-6 relative z-10 animate-fade-in">
-        
+
         {/* Badge Tagline */}
-        <span 
+        <span
           className="px-3.5 py-1 text-[10px] md:text-xs font-black uppercase tracking-wider rounded-full border bg-white/5 backdrop-blur-md shadow-sm select-none"
           style={{ borderColor: `${themeColor}40`, color: themeColor }}
         >
@@ -49,15 +49,15 @@ const Hero = () => {
 
         {/* CTAs */}
         <div className="flex flex-col sm:flex-row gap-4 mt-4 w-full sm:w-auto justify-center">
-          <Link 
-            href="/products" 
+          <Link
+            href="/products"
             className="px-8 py-3.5 text-white font-bold text-sm rounded-2xl shadow-lg hover:scale-[1.02] active:scale-[0.98] transition flex items-center justify-center gap-2 cursor-pointer"
             style={{ backgroundColor: themeColor, boxShadow: `0 10px 25px -5px ${themeColor}30` }}
           >
             <BiShoppingBag className="text-lg" /> Explore Catalog
           </Link>
-          <Link 
-            href="/offers" 
+          <Link
+            href="/offers"
             className="px-8 py-3.5 bg-white/5 hover:bg-white/10 text-white font-bold text-sm rounded-2xl border border-white/10 hover:border-white/20 transition flex items-center justify-center gap-2 cursor-pointer backdrop-blur-md"
           >
             <BiPurchaseTagAlt className="text-lg" /> View Offers

@@ -14,7 +14,7 @@ const StoreLocation = () => {
   return (
     <div className="w-full py-16 px-4 md:px-8 bg-white border-b border-slate-100 animate-fade-in">
       <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-10 items-stretch">
-        
+
         {/* Info Card */}
         <div className="flex-1 flex flex-col gap-6 justify-center">
           <div className="flex flex-col gap-1.5">
@@ -73,7 +73,7 @@ const StoreLocation = () => {
         <div className="flex-1 min-h-[300px] rounded-3xl overflow-hidden border border-slate-200/60 bg-slate-50 relative flex items-center justify-center p-6 text-center select-none shadow-sm">
           {/* Decorative Map Pattern Background */}
           <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
-          
+
           <div className="flex flex-col items-center gap-3 relative z-10">
             <div className="w-14 h-14 rounded-full flex items-center justify-center text-white text-2xl shadow-lg" style={{ backgroundColor: themeColor }}>
               <BiMap />

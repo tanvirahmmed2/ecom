@@ -50,7 +50,7 @@ const Contact = () => {
   return (
     <div className="w-full py-16 px-4 md:px-8 bg-slate-50 border-b border-slate-100">
       <div className="max-w-4xl mx-auto flex flex-col md:flex-row gap-12 bg-white rounded-3xl p-6 md:p-10 border border-slate-100 shadow-sm animate-fade-in">
-        
+
         {/* Left Column Description */}
         <div className="flex-1 flex flex-col gap-5 justify-center">
           <span className="text-xs font-black uppercase tracking-widest text-emerald-600" style={{ color: themeColor }}>
