@@ -14,8 +14,10 @@ import {
   BiChevronRight,
   BiLoaderAlt,
   BiMessageAltDetail,
-  BiInfoCircle
+  BiInfoCircle,
+  BiPrinter
 } from 'react-icons/bi'
+import { printReceipt } from '@/lib/printreceipt'
 
 export default function TrackOrderPage() {
   const { website } = useContext(Context)
@@ -133,9 +135,17 @@ export default function TrackOrderPage() {
             
             {/* Status Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-5">
-              <div className="flex flex-col gap-0.5">
-                <span className="text-xxs font-bold text-slate-400 uppercase tracking-widest">Order ID</span>
-                <span className="text-lg font-black text-slate-850">#ORD-{order.order_id}</span>
+              <div className="flex items-center gap-4 flex-wrap">
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-xxs font-bold text-slate-400 uppercase tracking-widest">Order ID</span>
+                  <span className="text-lg font-black text-slate-850">#ORD-{order.order_id}</span>
+                </div>
+                <button
+                  onClick={() => printReceipt(order, website)}
+                  className="px-3 py-1.5 border border-slate-200 hover:border-slate-350 hover:bg-slate-50 text-slate-650 text-[10px] font-bold uppercase tracking-wider rounded-xl transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <BiPrinter className="text-sm" /> Print Invoice
+                </button>
               </div>
               <div className="flex flex-col sm:items-end gap-1.5">
                 <span className="text-xxs font-bold text-slate-400 uppercase tracking-widest text-left sm:text-right">Current Status</span>

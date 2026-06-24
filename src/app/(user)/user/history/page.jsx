@@ -12,8 +12,10 @@ import {
   BiCheckCircle, 
   BiLoaderAlt,
   BiMessageAltDetail,
-  BiSearch
+  BiSearch,
+  BiPrinter
 } from 'react-icons/bi'
+import { printReceipt } from '@/lib/printreceipt'
 
 export default function UserHistoryPage() {
   const { userSidebar, website } = useContext(Context)
@@ -87,7 +89,7 @@ export default function UserHistoryPage() {
                       {order.status}
                     </span>
                   </div>
-                  <div className="flex items-center gap-4 text-xs font-semibold text-slate-455">
+                  <div className="flex items-center gap-2 flex-wrap text-xs font-semibold text-slate-455">
                     <span>{new Date(order.created_at).toLocaleDateString()}</span>
                     <Link 
                       href={`/track-order?id=${order.order_id}`}
@@ -95,6 +97,12 @@ export default function UserHistoryPage() {
                     >
                       <BiSearch className="text-sm" /> Track Order
                     </Link>
+                    <button 
+                      onClick={() => printReceipt(order, website)}
+                      className="px-3 py-1.5 border border-slate-200 hover:border-slate-350 rounded-xl flex items-center gap-1 hover:bg-slate-50 transition text-slate-650 cursor-pointer font-semibold"
+                    >
+                      <BiPrinter className="text-sm" /> Print Invoice
+                    </button>
                   </div>
                 </div>
 

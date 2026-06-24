@@ -74,6 +74,7 @@ export async function POST(req) {
     // 1. Customer profile upsert
     let customerId = null;
     const cleanPhone = phone.trim();
+    const cleanAddr = shipping_address ? shipping_address.trim() : 'In-Store POS';
 
     if (is_pos) {
       const checkCust = await client.query('SELECT customer_id FROM customers WHERE phone = $1 LIMIT 1', [cleanPhone]);
@@ -103,7 +104,6 @@ export async function POST(req) {
     } else {
       const cleanName = name ? name.trim() : 'Guest Customer';
       const cleanEmail = email ? email.trim() : null;
-      const cleanAddr = shipping_address.trim();
 
       const checkCust = await client.query('SELECT customer_id FROM customers WHERE phone = $1', [cleanPhone]);
       if (checkCust.rows.length > 0) {
@@ -218,7 +218,7 @@ export async function POST(req) {
         deliveryCharge,
         totalAmount,
         is_pos ? 0 : totalAmount, // POS is fully paid (due = 0), COD has full due until delivery
-        is_pos ? (payment_type || 'cash') : 'cod',
+        is_pos ? 'prepaid' : 'cod',
         note || null
       ]
     );
@@ -277,10 +277,18 @@ export async function POST(req) {
     // Commit Transaction
     await client.query('COMMIT');
 
+    // Fetch customer details to return to the frontend
+    const customerRes = await client.query(
+      'SELECT name, phone, email, address FROM customers WHERE customer_id = $1',
+      [customerId]
+    );
+    const customerDetails = customerRes.rows[0];
+
     return Response.json({
       message: 'POS Order placed successfully!',
       order_id: orderId,
-      total_amount: totalAmount
+      total_amount: totalAmount,
+      customer: customerDetails
     }, { status: 201 });
 
   } catch (error) {

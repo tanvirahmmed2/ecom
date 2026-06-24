@@ -3,6 +3,7 @@ import React, { useState, useEffect, useContext, useRef } from 'react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Context } from '@/component/helper/Context'
 import { 
   BiSearch, 
@@ -21,6 +22,7 @@ import {
 } from 'react-icons/bi'
 
 export default function POSPageClean() {
+  const router = useRouter()
   const { user, loading: userLoading, dashSidebar, website } = useContext(Context)
   const themeColor = website?.theme_color || '#0f172a' // fallback to slate-900
 
@@ -42,25 +44,12 @@ export default function POSPageClean() {
   const [submitting, setSubmitting] = useState(false)
 
   // Customer State
-  const [customer, setCustomer] = useState({
-    phone: '',
-    name: 'Guest Customer',
-    email: '',
-    address: 'In-Store POS'
-  })
-  const [customerSearch, setCustomerSearch] = useState('')
-  const [customerSuggestions, setCustomerSuggestions] = useState([])
-  const [showCustDropdown, setShowCustDropdown] = useState(false)
-  const [searchingCustomer, setSearchingCustomer] = useState(false)
+  const [customerPhone, setCustomerPhone] = useState('')
 
   // Variant selector
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [productVariants, setProductVariants] = useState([])
   const [loadingVariants, setLoadingVariants] = useState(false)
-
-  // Receipt Modal
-  const [showReceipt, setShowReceipt] = useState(false)
-  const [completedOrder, setCompletedOrder] = useState(null)
 
   const barcodeInputRef = useRef(null)
 
@@ -88,28 +77,7 @@ export default function POSPageClean() {
     }
   }, [user])
 
-  // Customer search autocomplete
-  useEffect(() => {
-    if (customerSearch.trim().length >= 3) {
-      setSearchingCustomer(true)
-      const delayDebounce = setTimeout(async () => {
-        try {
-          const res = await axios.get(`/api/customer?search=${customerSearch}`)
-          setCustomerSuggestions(res.data)
-          setShowCustDropdown(true)
-        } catch (err) {
-          console.error(err)
-        } finally {
-          setSearchingCustomer(false)
-        }
-      }, 400)
-      return () => clearTimeout(delayDebounce)
-    } else {
-      setCustomerSuggestions([])
-      setShowCustDropdown(false)
-      setSearchingCustomer(false)
-    }
-  }, [customerSearch])
+
 
   // Handle barcode submit
   const handleBarcodeSubmit = (e) => {
@@ -233,7 +201,7 @@ export default function POSPageClean() {
       toast.error('Cart is empty')
       return
     }
-    if (!customer.phone.trim()) {
+    if (!customerPhone.trim()) {
       toast.error('Customer phone number is required')
       return
     }
@@ -245,12 +213,7 @@ export default function POSPageClean() {
     setSubmitting(true)
     try {
       const payload = {
-        name: customer.name || 'Guest Customer',
-        phone: customer.phone,
-        email: customer.email || null,
-        shipping_address: customer.address || 'In-Store POS',
-        shipping_city: 'Dhaka',
-        shipping_area: 'In-Store POS',
+        phone: customerPhone,
         note: note,
         is_pos: true,
         payment_type: paymentType,
@@ -266,37 +229,16 @@ export default function POSPageClean() {
       const res = await axios.post('/api/sale', payload)
       toast.success('Sale Completed!')
 
-      setCompletedOrder({
-        order_id: res.data.order_id,
-        created_at: new Date().toISOString(),
-        customer: customer,
-        items: cart,
-        subtotal: subtotal,
-        discount: discountVal,
-        delivery: deliveryChargeVal,
-        total: totalAmount,
-        received: paymentType === 'cash' ? receivedVal : totalAmount,
-        change: changeAmount,
-        paymentType: paymentType,
-        note: note
-      })
-      setShowReceipt(true)
-
       // Reset fields
       setCart([])
       setDiscount(0)
       setDeliveryCharge(0)
       setAmountReceived('')
       setNote('')
-      setCustomer({
-        phone: '',
-        name: 'Guest Customer',
-        email: '',
-        address: 'In-Store POS'
-      })
-      setCustomerSearch('')
+      setCustomerPhone('')
 
-      fetchData()
+      // Redirect to dynamic order details page
+      router.push(`/dashboard/sales/sale/${res.data.order_id}`)
 
     } catch (err) {
       console.error(err)
@@ -305,6 +247,8 @@ export default function POSPageClean() {
       setSubmitting(false)
     }
   }
+
+
 
   if (userLoading) {
     return (
@@ -377,63 +321,17 @@ export default function POSPageClean() {
             <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col gap-3 relative">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block border-b border-slate-100 pb-1.5">Assign Customer</span>
 
-              {/* Phone search autocomplete */}
+              {/* Phone search input */}
               <div className="relative">
                 <BiPhone className="absolute left-2.5 top-2.5 text-slate-400 text-sm" />
                 <input
                   type="text"
                   placeholder="Enter Customer Phone Number..."
-                  value={customerSearch}
-                  onChange={(e) => {
-                    setCustomerSearch(e.target.value)
-                    setCustomer(prev => ({ 
-                      ...prev, 
-                      phone: e.target.value,
-                      name: 'Guest Customer', 
-                      email: '', 
-                      address: 'In-Store POS' 
-                    }))
-                  }}
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
                   className="w-full pl-7 pr-3 py-1.5 border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-slate-350 bg-slate-50/50 text-slate-800"
                 />
-
-                {searchingCustomer && (
-                  <BiLoaderAlt className="absolute right-2.5 top-2.5 animate-spin text-slate-400 text-sm" />
-                )}
-
-                {/* Dropdown search */}
-                {showCustDropdown && customerSuggestions.length > 0 && (
-                  <div className="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-30 max-h-40 overflow-y-auto divide-y divide-slate-100">
-                    {customerSuggestions.map((s) => (
-                      <button
-                        key={s.customer_id}
-                        type="button"
-                        onClick={() => {
-                          setCustomer({
-                            phone: s.phone,
-                            name: s.name || 'Guest Customer',
-                            email: s.email || '',
-                            address: s.address || 'In-Store POS'
-                          })
-                          setCustomerSearch(s.phone)
-                          setShowCustDropdown(false)
-                        }}
-                        className="w-full px-3 py-2 text-left text-xxs font-semibold hover:bg-slate-50 flex flex-col cursor-pointer"
-                      >
-                        <span className="text-slate-800 font-bold">{s.name}</span>
-                        <span className="text-slate-400 text-[10px]">{s.phone}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
-
-              {/* Show selected customer indicator if name exists and isn't guest */}
-              {customer.name && customer.name !== 'Guest Customer' && (
-                <div className="text-[10px] text-emerald-600 font-bold bg-emerald-50 border border-emerald-100 rounded px-2.5 py-1 flex items-center gap-1.5 animate-in fade-in duration-150">
-                  <BiUser /> Selected: {customer.name} {customer.email ? `(${customer.email})` : ''}
-                </div>
-              )}
 
             </div>
 
@@ -449,13 +347,7 @@ export default function POSPageClean() {
                       setDeliveryCharge(0)
                       setAmountReceived('')
                       setNote('')
-                      setCustomer({
-                        phone: '',
-                        name: 'Guest Customer',
-                        email: '',
-                        address: 'In-Store POS'
-                      })
-                      setCustomerSearch('')
+                      setCustomerPhone('')
                       toast.success('Cart cleared')
                     }}
                     className="text-[9px] font-bold text-slate-400 hover:text-rose-500 transition-colors uppercase tracking-wider cursor-pointer"
@@ -827,125 +719,7 @@ export default function POSPageClean() {
         </div>
       )}
 
-      {/* MODAL 2: Receipt print slip view */}
-      {showReceipt && completedOrder && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xxs flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white border border-slate-200 rounded-xl max-w-sm w-full shadow-lg p-5 flex flex-col gap-4 animate-in fade-in duration-100">
-            
-            <div className="flex justify-between items-center border-b border-slate-200 pb-2">
-              <span className="text-xs font-bold text-slate-900 uppercase tracking-widest flex items-center gap-1.5">
-                <BiReceipt className="text-slate-800 text-sm" /> Invoice Receipt
-              </span>
-              <button 
-                onClick={() => setShowReceipt(false)}
-                className="text-slate-400 hover:text-slate-700 font-bold cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
 
-            {/* Printable section wrapper */}
-            <div 
-              id="print-receipt-section"
-              className="bg-slate-50/50 border border-slate-150 rounded-lg p-4 font-mono text-[9px] text-slate-800 leading-normal flex flex-col gap-2.5"
-            >
-              <div className="text-center flex flex-col border-b border-dashed border-slate-300 pb-2 gap-0.5">
-                <span className="font-bold text-xs uppercase text-slate-900">{website?.name || 'STORE'}</span>
-                <span className="text-[8px] text-slate-500">{website?.address || 'Dhaka, Bangladesh'}</span>
-                <span className="text-[8px] text-slate-500">Phone: {website?.phone || 'N/A'}</span>
-              </div>
-
-              {/* Meta logs */}
-              <div className="flex flex-col gap-0.5 border-b border-slate-200 pb-2">
-                <div>INVOICE: #{completedOrder.order_id}</div>
-                <div>DATE: {new Date(completedOrder.created_at).toLocaleString()}</div>
-                <div>AGENT: {user.name}</div>
-              </div>
-
-              {/* Customer logs */}
-              <div className="flex flex-col gap-0.5 border-b border-slate-200 pb-2">
-                <div>CUSTOMER: {completedOrder.customer.name}</div>
-                <div>PHONE: {completedOrder.customer.phone}</div>
-                <div>ADDRESS: {completedOrder.customer.address}</div>
-              </div>
-
-              {/* Items Table */}
-              <div className="flex flex-col gap-1 border-b border-dashed border-slate-300 pb-2">
-                <div className="flex justify-between font-bold text-slate-900 text-[8px] border-b border-slate-200 pb-1 uppercase">
-                  <span className="w-1/2">Item Description</span>
-                  <span className="w-1/6 text-center">Qty</span>
-                  <span className="w-1/3 text-right">Price</span>
-                </div>
-                {completedOrder.items.map((item) => (
-                  <div key={item.cartKey} className="flex justify-between text-slate-750 text-slate-700">
-                    <div className="w-1/2 min-w-0 truncate">
-                      <span>{item.name}</span>
-                      {item.variant_name && <span className="text-[7px] text-slate-450 block font-normal">({item.variant_name})</span>}
-                    </div>
-                    <span className="w-1/6 text-center">{item.quantity}</span>
-                    <span className="w-1/3 text-right font-bold">৳{(item.price * item.quantity).toFixed(2)}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Invoice Calculations */}
-              <div className="flex flex-col gap-1 text-right text-[8px]">
-                <div className="flex justify-between">
-                  <span>SUBTOTAL</span>
-                  <span>৳{completedOrder.subtotal.toFixed(2)}</span>
-                </div>
-                {completedOrder.discount > 0 && (
-                  <div className="flex justify-between text-rose-600">
-                    <span>DISCOUNT</span>
-                    <span>- ৳{completedOrder.discount.toFixed(2)}</span>
-                  </div>
-                )}
-                {completedOrder.delivery > 0 && (
-                  <div className="flex justify-between">
-                    <span>DELIVERY</span>
-                    <span>৳{completedOrder.delivery.toFixed(2)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between font-bold text-slate-900 border-t border-slate-200 pt-1.5 text-xs">
-                  <span>NET TOTAL</span>
-                  <span>৳{completedOrder.total.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-slate-550 border-t border-slate-100 pt-1 text-[8px]">
-                  <span>PAID VIA: {completedOrder.paymentType.toUpperCase()}</span>
-                  <span>RECEIVED: ৳{completedOrder.received.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-emerald-700 font-bold">
-                  <span>CHANGE RETURN</span>
-                  <span>৳{completedOrder.change.toFixed(2)}</span>
-                </div>
-              </div>
-
-              {completedOrder.note && (
-                <div className="border border-slate-200 p-1.5 rounded italic text-slate-500 mt-1">
-                  Note: "{completedOrder.note}"
-                </div>
-              )}
-            </div>
-
-            {/* Modal actions */}
-            <div className="flex gap-3 border-t border-slate-150 pt-3">
-              <button
-                onClick={triggerPrintReceipt}
-                className="flex-1 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer"
-              >
-                <BiPrinter /> Print Receipt
-              </button>
-              <button
-                onClick={() => setShowReceipt(false)}
-                className="flex-1 py-1.5 border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 rounded text-xs font-bold transition cursor-pointer"
-              >
-                Close
-              </button>
-            </div>
-
-          </div>
-        </div>
-      )}
 
     </div>
   )

@@ -14,7 +14,7 @@ export async function GET(req) {
     }
 
     const result = await query(
-      `SELECT o.*, 
+      `SELECT o.*, c.name AS customer_name,
               (SELECT JSON_AGG(JSON_BUILD_OBJECT(
                  'order_item_id', oi.order_item_id,
                  'product_id', oi.product_id,
@@ -29,6 +29,7 @@ export async function GET(req) {
               LEFT JOIN product_variants pv ON oi.variant_id = pv.variant_id
               WHERE oi.order_id = o.order_id) AS items
        FROM public.orders o
+       LEFT JOIN customers c ON o.customer_id = c.customer_id
        WHERE o.phone = $1
        ORDER BY o.order_id DESC`,
       [userPhone]
