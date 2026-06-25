@@ -2,16 +2,73 @@
 
 import Link from 'next/link'
 import React, { useContext, useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation';
 import { BiCart } from 'react-icons/bi';
 import { FiSearch, FiChevronDown, FiUser, FiSliders, FiLogOut } from "react-icons/fi";
 import { Context } from '../helper/Context';
+import axios from 'axios';
 
 const Navbar = () => {
+    const router = useRouter()
     const [lastScroll, setLastScroll] = useState(0)
     const [showNavbar, setShowNavbar] = useState(true)
     const { cartbar, setCartbar, user, loading, logout, website } = useContext(Context)
 
-    const [searchValue, setSearchValue] = useState(null)
+    const [searchValue, setSearchValue] = useState('')
+    const [allProducts, setAllProducts] = useState([])
+    const [searchResults, setSearchResults] = useState([])
+    const [showDropdown, setShowDropdown] = useState(false)
+
+    // Fetch products once on focus to act as instant search cache
+    const handleFocus = async () => {
+        if (allProducts.length === 0) {
+            try {
+                const res = await axios.get('/api/product')
+                setAllProducts(res.data.filter(p => p.is_active !== false))
+            } catch (err) {
+                console.error("Failed to fetch products for instant search", err)
+            }
+        }
+        setShowDropdown(true)
+    }
+
+    const handleSearchChange = (e) => {
+        const val = e.target.value
+        setSearchValue(val)
+        if (!val.trim()) {
+            setSearchResults([])
+            return
+        }
+        const filtered = allProducts.filter(p => 
+            p.name.toLowerCase().includes(val.toLowerCase()) ||
+            (p.category_name && p.category_name.toLowerCase().includes(val.toLowerCase())) ||
+            (p.brand_name && p.brand_name.toLowerCase().includes(val.toLowerCase()))
+        )
+        setSearchResults(filtered.slice(0, 5))
+    }
+
+    const handleSearchSubmit = (e) => {
+        if (e) {
+            e.preventDefault()
+            e.stopPropagation()
+        }
+        if (searchValue.trim()) {
+            router.push(`/search?v=${encodeURIComponent(searchValue.trim())}`)
+            setShowDropdown(false)
+        }
+    }
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            handleSearchSubmit()
+        }
+    }
+
+    const handleBlur = () => {
+        setTimeout(() => {
+            setShowDropdown(false)
+        }, 200)
+    }
 
     useEffect(() => {
         const handleScroll = () => {
@@ -44,16 +101,77 @@ const Navbar = () => {
                 )}
             </Link>
 
-            <div className='w-auto flex flex-row items-center justify-center h-10 rounded-xl bg-white overflow-hidden'>
-                <input type="text" onChange={(e) => setSearchValue(e.target.value)} className='outline-none w-full p-2 text-black' />
-                <Link 
-                    href={`/search?v=${searchValue}`} 
-                    style={{ backgroundColor: website?.theme_color || '#dc2626' }}
-                    className='w-auto text-white p-2 flex items-center justify-center h-12 transition'
-                >
-                    <FiSearch />
-                </Link>
+            <div className='relative w-48 sm:w-64 md:w-80 flex flex-col z-50'>
+                <div className='w-full flex flex-row items-center justify-between h-10 rounded-xl bg-white overflow-hidden border border-slate-200 shadow-sm focus-within:border-slate-400 transition-colors'>
+                    <input 
+                        type="text" 
+                        placeholder="Search products..."
+                        value={searchValue}
+                        onChange={handleSearchChange}
+                        onFocus={handleFocus}
+                        onBlur={handleBlur}
+                        onKeyDown={handleKeyDown}
+                        className='outline-none w-full px-3 py-2 text-black text-sm bg-transparent placeholder-slate-400' 
+                    />
+                    <button 
+                        onClick={handleSearchSubmit}
+                        style={{ backgroundColor: website?.theme_color || '#dc2626' }}
+                        className='w-12 text-white flex items-center justify-center h-10 transition hover:brightness-95 cursor-pointer flex-shrink-0'
+                    >
+                        <FiSearch />
+                    </button>
+                </div>
+
+                {showDropdown && searchValue.trim() && (
+                    <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 overflow-hidden text-slate-800 flex flex-col p-2 gap-1">
+                        {searchResults.length > 0 ? (
+                            <>
+                                {searchResults.map(p => (
+                                    <Link
+                                        key={p.product_id}
+                                        href={`/products/${p.slug}`}
+                                        className="flex flex-row items-center gap-3 p-2 hover:bg-slate-50 rounded-xl transition"
+                                    >
+                                        <img 
+                                            src={p.image || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100'} 
+                                            alt={p.name} 
+                                            className="w-9 h-9 object-cover rounded-lg border border-slate-100 flex-shrink-0"
+                                        />
+                                        <div className="flex-1 min-w-0">
+                                            <h4 className="text-xs font-semibold text-slate-800 truncate">{p.name}</h4>
+                                            <p className="text-[10px] text-slate-400 truncate">{p.category_name || 'General'}</p>
+                                        </div>
+                                        <div className="text-right flex-shrink-0">
+                                            <span className="text-xs font-bold text-slate-900">
+                                                ${(p.discount_price && parseFloat(p.discount_price) > 0)
+                                                    ? Math.max(0, parseFloat(p.sale_price) - parseFloat(p.discount_price)).toFixed(2)
+                                                    : parseFloat(p.sale_price).toFixed(2)}
+                                            </span>
+                                        </div>
+                                    </Link>
+                                ))}
+                                {allProducts.filter(p => 
+                                    p.name.toLowerCase().includes(searchValue.toLowerCase()) ||
+                                    (p.category_name && p.category_name.toLowerCase().includes(searchValue.toLowerCase())) ||
+                                    (p.brand_name && p.brand_name.toLowerCase().includes(searchValue.toLowerCase()))
+                                ).length > 5 && (
+                                    <button
+                                        onClick={handleSearchSubmit}
+                                        className="w-full text-center py-2 text-xs font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-50 rounded-xl border-t border-slate-100 mt-1 transition cursor-pointer"
+                                    >
+                                        View all results
+                                    </button>
+                                )}
+                            </>
+                        ) : (
+                            <div className="p-4 text-center text-xs text-slate-400">
+                                No products found
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
+
 
             <div className='w-auto hidden md:flex flex-row items-center justify-center gap-4 h-14'>
                 <Link href={'/offers'}>Offers</Link>
