@@ -273,81 +273,28 @@ export default function OffersPage() {
               </label>
             </div>
 
-            {/* Category Hierarchy Filters */}
+            {/* Category Filter Dropdown */}
             <div className="flex flex-col gap-2 border-t border-slate-100 pt-4">
-              <label className="text-xs font-bold text-slate-500 flex items-center justify-between">
-                <span>Categories</span>
-                {selectedCategoryId && (
-                  <button 
-                    onClick={() => setSelectedCategoryId(null)}
-                    className="text-[10px] text-emerald-600 hover:text-emerald-500 font-bold uppercase transition"
-                  >
-                    Clear
-                  </button>
-                )}
-              </label>
-              
-              <div className="flex flex-col gap-1 max-h-[300px] overflow-y-auto pr-1">
-                <button
-                  onClick={() => setSelectedCategoryId(null)}
-                  className={`w-full text-left px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
-                    selectedCategoryId === null 
-                      ? 'bg-slate-900 text-white font-bold' 
-                      : 'text-slate-650 hover:bg-slate-50'
-                  }`}
+              <label className="text-xs font-bold text-slate-500">Category</label>
+              <div className="relative">
+                <BiCategory className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-base" />
+                <select
+                  value={selectedCategoryId || ''}
+                  onChange={(e) => setSelectedCategoryId(e.target.value ? parseInt(e.target.value, 10) : null)}
+                  className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition cursor-pointer"
                 >
-                  All Categories
-                </button>
-
-                {categories.map((parent) => {
-                  const isParentActive = selectedCategoryId === parent.id
-                  const isChildActive = parent.subcategory?.some(sub => sub.id === selectedCategoryId)
-                  const showSubcategories = isParentActive || isChildActive
-
-                  return (
-                    <div key={parent.id} className="flex flex-col">
-                      <button
-                        onClick={() => setSelectedCategoryId(parent.id)}
-                        className={`w-full text-left px-3 py-1.5 text-xs font-semibold rounded-lg transition flex items-center justify-between gap-1.5 ${
-                          isParentActive 
-                            ? 'bg-slate-900 text-white font-bold' 
-                            : isChildActive
-                              ? 'bg-slate-100 text-slate-800 font-bold'
-                              : 'text-slate-650 hover:bg-slate-50'
-                        }`}
-                      >
-                        <span className="truncate">{parent.category}</span>
-                        {parent.subcategory?.length > 0 && (
-                          <span className="text-[10px] opacity-60">
-                            {showSubcategories ? '▼' : '▶'}
-                          </span>
-                        )}
-                      </button>
-
-                      {/* Nested Subcategories */}
-                      {showSubcategories && parent.subcategory?.length > 0 && (
-                        <div className="pl-4 border-l border-slate-200 ml-3.5 my-1 flex flex-col gap-0.5">
-                          {parent.subcategory.map((sub) => {
-                            const isSubActive = selectedCategoryId === sub.id
-                            return (
-                              <button
-                                key={sub.id}
-                                onClick={() => setSelectedCategoryId(sub.id)}
-                                className={`w-full text-left px-2.5 py-1 text-xxs font-semibold rounded-md transition ${
-                                  isSubActive 
-                                    ? 'bg-slate-900 text-white font-bold' 
-                                    : 'text-slate-550 hover:bg-slate-50'
-                                  }`}
-                              >
-                                {sub.name}
-                              </button>
-                            )
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
+                  <option value="">All Categories</option>
+                  {categories.map((parent) => (
+                    <React.Fragment key={parent.id}>
+                      <option value={parent.id} className="font-bold">{parent.category}</option>
+                      {parent.subcategory?.map((sub) => (
+                        <option key={sub.id} value={sub.id}>
+                          &nbsp;&nbsp;&nbsp;&nbsp;{sub.name}
+                        </option>
+                      ))}
+                    </React.Fragment>
+                  ))}
+                </select>
               </div>
             </div>
 

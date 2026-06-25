@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect, useContext } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import axios from 'axios'
 import toast from 'react-hot-toast'
@@ -21,6 +21,7 @@ import Image from 'next/image'
 export default function ProductsCategorySlugPage() {
   const params = useParams()
   const slug = params?.name
+  const router = useRouter()
 
   const { categories, website } = useContext(Context)
   const themeColor = website?.theme_color || '#10b981'
@@ -167,57 +168,13 @@ export default function ProductsCategorySlugPage() {
           <span className="text-slate-700">{category.name}</span>
         </div>
 
-        {/* Hero Section of Category */}
-        <div className="relative h-28 w-full rounded-3xl overflow-hidden bg-slate-900 shadow-sm border border-slate-100 flex items-end">
-          <Image width={1000} height={100}
-            src={category.image || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&auto=format&fit=crop&q=80'}
-            alt={category.name}
-            className="absolute inset-0 w-full h-full object-cover opacity-40"
-          />
-          <div className="absolute inset-0 bg-linear-to-t from-slate-950 via-slate-950/40 to-transparent" />
-          
-          <div className="relative p-8 md:p-10 flex flex-col gap-2">
-            <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight">
-              {category.name}
-            </h1>
-            
-          </div>
+        {/* Category Header */}
+        <div className="flex flex-col gap-1">
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">{category.name}</h1>
+          <p className="text-xs text-slate-550">
+            {category.description || `Browse products under the ${category.name} category`}
+          </p>
         </div>
-
-        {/* Subcategories Filter Chips */}
-        {subcategories.length > 0 && (
-          <div className="flex flex-col gap-2">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Filter by Subcategory</span>
-            <div className="flex flex-wrap gap-2.5">
-              {/* Parent Category option if currently viewing subcategory */}
-              {parentCat && (
-                <Link
-                  href={`/products/category/${parentCat.slug}`}
-                  className="px-4 py-2 bg-white border border-slate-200 hover:border-slate-350 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
-                >
-                  <BiArrowBack className="text-sm" /> All {parentCat.category}
-                </Link>
-              )}
-              {subcategories.map((sub) => {
-                const isActive = sub.slug === slug
-                return (
-                  <Link
-                    key={sub.id}
-                    href={`/products/category/${sub.slug}`}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
-                      isActive 
-                        ? 'bg-emerald-600 text-white shadow-md shadow-emerald-605/10'
-                        : 'bg-white hover:bg-slate-50 text-slate-650 border border-slate-200 hover:border-slate-300'
-                    }`}
-                    style={isActive ? { backgroundColor: themeColor } : {}}
-                  >
-                    {sub.name}
-                  </Link>
-                )
-              })}
-            </div>
-          </div>
-        )}
 
         {/* Filters and Product Catalog Container */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -227,6 +184,36 @@ export default function ProductsCategorySlugPage() {
             <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2 border-b border-slate-100 pb-3">
               <BiFilterAlt className="text-emerald-600 text-base" /> Filters
             </h3>
+
+            {/* Subcategory Select Filter */}
+            {subcategories.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-bold text-slate-500">Subcategory</label>
+                <div className="relative">
+                  <BiCategory className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-base" />
+                  <select
+                    value={slug || ''}
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        router.push(`/products/category/${e.target.value}`)
+                      }
+                    }}
+                    className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition cursor-pointer"
+                  >
+                    {parentCat ? (
+                      <option value={parentCat.slug}>All {parentCat.category}</option>
+                    ) : (
+                      <option value={category.slug}>All {category.name}</option>
+                    )}
+                    {subcategories.map((sub) => (
+                      <option key={sub.id} value={sub.slug}>
+                        {sub.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
 
             {/* Search */}
             <div className="flex flex-col gap-2">
