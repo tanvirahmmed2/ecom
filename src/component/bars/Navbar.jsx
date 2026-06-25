@@ -143,7 +143,7 @@ const Navbar = () => {
                                         </div>
                                         <div className="text-right flex-shrink-0">
                                             <span className="text-xs font-bold text-slate-900">
-                                                ${(p.discount_price && parseFloat(p.discount_price) > 0)
+                                                ৳{(p.discount_price && parseFloat(p.discount_price) > 0)
                                                     ? Math.max(0, parseFloat(p.sale_price) - parseFloat(p.discount_price)).toFixed(2)
                                                     : parseFloat(p.sale_price).toFixed(2)}
                                             </span>
