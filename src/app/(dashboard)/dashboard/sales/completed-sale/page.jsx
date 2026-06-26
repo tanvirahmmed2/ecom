@@ -74,145 +74,69 @@ export default function CompletedSalesPage() {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6">
-            {orders.map((order) => (
-              <div 
-                key={order.order_id}
-                className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 flex flex-col lg:flex-row justify-between gap-6 hover:shadow-md transition duration-300"
-              >
-                {/* Left Side: Order & Customer Meta */}
-                <div className="flex-1 flex flex-col gap-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-black text-slate-800">
-                      Order #ORD-{order.order_id}
-                    </span>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-705 border border-emerald-100/50" style={{ color: themeColor, backgroundColor: themeColor + '10' }}>
-                      {order.status}
-                    </span>
-                    <span className="text-xxs text-slate-400 font-medium">
-                      {new Date(order.created_at).toLocaleString()}
-                    </span>
-                  </div>
-
-                  {/* Customer details card */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100/60 text-xs">
-                    <div className="flex flex-col gap-1">
-                      <span className="font-bold text-slate-450 uppercase tracking-wide">Customer</span>
-                      <span className="font-bold text-slate-800 flex items-center gap-1">
-                        <BiUser className="text-sm text-slate-500" /> {order.customer_name || 'Guest'}
-                      </span>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="font-bold text-slate-450 uppercase tracking-wide">Contact</span>
-                      <span className="font-bold text-slate-800 flex items-center gap-1">
-                        <BiPhone className="text-sm text-slate-500" /> {order.phone}
-                      </span>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="font-bold text-slate-450 uppercase tracking-wide">Shipping City</span>
-                      <span className="font-bold text-slate-800">
-                        {order.shipping_city} {order.shipping_area ? `(${order.shipping_area})` : ''}
-                      </span>
-                    </div>
-                    <div className="flex flex-col gap-1 col-span-1 md:col-span-3 border-t border-slate-200/40 pt-2 mt-1">
-                      <span className="font-bold text-slate-450 uppercase tracking-wide">Shipping Address</span>
-                      <span className="text-slate-655 text-slate-600 flex items-start gap-1 leading-relaxed">
-                        <BiMap className="text-sm text-slate-500 mt-0.5 shrink-0" /> {order.shipping_address}
-                      </span>
-                    </div>
-                    {order.courier_name && (
-                      <div className="flex flex-col gap-1 col-span-1 md:col-span-3 border-t border-slate-200/40 pt-2 mt-1">
-                        <span className="font-bold text-slate-455 uppercase tracking-wide">Courier Dispatch Details</span>
-                        <span className="font-semibold text-slate-800">
-                          {order.courier_name} {order.courier_tracking_id ? ` (Tracking ID: ${order.courier_tracking_id})` : ''}
+          <div className="w-full overflow-x-auto bg-white border border-slate-150 rounded-2xl shadow-sm">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead className="bg-slate-100/80 text-slate-655 font-bold border-b border-slate-200">
+                <tr>
+                  <th className="px-4 py-3 text-center">Order ID</th>
+                  <th className="px-4 py-3">Date</th>
+                  <th className="px-4 py-3">Customer Details</th>
+                  <th className="px-4 py-3">Products</th>
+                  <th className="px-4 py-3 text-right">Subtotal</th>
+                  <th className="px-4 py-3 text-right">Discount</th>
+                  <th className="px-4 py-3 text-right">Shipping</th>
+                  <th className="px-4 py-3 text-right">Total Invoice</th>
+                  <th className="px-4 py-3 text-right">Paid</th>
+                  <th className="px-4 py-3 text-right">Due</th>
+                  <th className="px-4 py-3">Courier Dispatch Details</th>
+                  <th className="px-4 py-3 text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-slate-700 bg-white">
+                {orders.map((order) => {
+                  const productsSummary = order.items
+                    ? order.items.map(item => `${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''} x${item.quantity}`).join(', ')
+                    : 'N/A'
+                  const paidAmount = parseFloat(order.total_amount) - parseFloat(order.due_amount)
+                  return (
+                    <tr key={order.order_id} className="hover:bg-slate-50/50 transition">
+                      <td className="px-4 py-3.5 text-center font-bold text-slate-850">#ORD-{order.order_id}</td>
+                      <td className="px-4 py-3.5 whitespace-nowrap text-slate-500">{new Date(order.created_at).toLocaleString()}</td>
+                      <td className="px-4 py-3.5">
+                        <div className="font-semibold text-slate-805">{order.customer_name || 'Guest'}</div>
+                        <div className="text-[10px] text-slate-500 font-medium">{order.phone}</div>
+                        <div className="text-[10px] text-slate-400 truncate max-w-[150px]" title={order.shipping_address}>{order.shipping_address}</div>
+                        {order.note && (
+                          <div className="text-[9px] text-rose-500 italic mt-0.5" title={order.note}>Note: "{order.note}"</div>
+                        )}
+                      </td>
+                      <td className="px-4 py-3.5 text-slate-500 max-w-[185px] truncate" title={productsSummary}>
+                        {productsSummary}
+                      </td>
+                      <td className="px-4 py-3.5 text-right font-medium">৳{parseFloat(order.subtotal_amount).toFixed(2)}</td>
+                      <td className="px-4 py-3.5 text-right text-rose-500">৳{parseFloat(order.total_discount_amount).toFixed(2)}</td>
+                      <td className="px-4 py-3.5 text-right">৳{parseFloat(order.delivery_charge).toFixed(2)}</td>
+                      <td className="px-4 py-3.5 text-right font-bold text-slate-900">৳{parseFloat(order.total_amount).toFixed(2)}</td>
+                      <td className="px-4 py-3.5 text-right text-emerald-600 font-bold">৳{paidAmount.toFixed(2)}</td>
+                      <td className="px-4 py-3.5 text-right text-rose-600 font-bold">৳{parseFloat(order.due_amount).toFixed(2)}</td>
+                      <td className="px-4 py-3.5 text-slate-500">
+                        {order.courier_name ? (
+                          <div>
+                            <div className="font-semibold text-slate-800">{order.courier_name}</div>
+                            {order.courier_tracking_id && <div className="text-[10px] text-slate-400 font-mono">ID: {order.courier_tracking_id}</div>}
+                          </div>
+                        ) : 'N/A'}
+                      </td>
+                      <td className="px-4 py-3.5 text-center">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-705 border border-emerald-100/50" style={{ color: themeColor, backgroundColor: themeColor + '10' }}>
+                          {order.status}
                         </span>
-                      </div>
-                    )}
-                    {order.note && (
-                      <div className="flex flex-col gap-1 col-span-1 md:col-span-3 border-t border-slate-200/40 pt-2 mt-1">
-                        <span className="font-bold text-slate-450 uppercase tracking-wide">Instruction Note</span>
-                        <span className="text-slate-600 flex items-start gap-1 leading-relaxed italic">
-                          <BiMessageAltDetail className="text-sm text-slate-400 mt-0.5 shrink-0" /> "{order.note}"
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Order Items Table */}
-                  <div className="border border-slate-100 rounded-2xl overflow-hidden text-xs">
-                    <table className="w-full text-left">
-                      <thead className="bg-slate-50 text-slate-600 font-bold border-b border-slate-100">
-                        <tr>
-                          <th className="px-4 py-2">Product</th>
-                          <th className="px-4 py-2 text-center">Qty</th>
-                          <th className="px-4 py-2 text-right">Price</th>
-                          <th className="px-4 py-2 text-right">Total</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 bg-white text-slate-700">
-                        {order.items && order.items.map((item, idx) => (
-                          <tr key={idx}>
-                            <td className="px-4 py-2.5 font-medium flex items-center gap-2">
-                              {item.product_image && (
-                                <img 
-                                  src={item.product_image} 
-                                  alt={item.product_name} 
-                                  className="w-7 h-7 object-cover rounded border border-slate-100 shrink-0"
-                                />
-                              )}
-                              <div>
-                                <span className="line-clamp-1">{item.product_name}</span>
-                                {item.variant_name && <span className="text-[10px] text-slate-400 font-bold uppercase">{item.variant_name}</span>}
-                              </div>
-                            </td>
-                            <td className="px-4 py-2.5 text-center font-bold">{item.quantity}</td>
-                            <td className="px-4 py-2.5 text-right">৳{parseFloat(item.price).toFixed(2)}</td>
-                            <td className="px-4 py-2.5 text-right font-bold">৳{(parseFloat(item.price) * item.quantity).toFixed(2)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                {/* Right Side: Total Summary */}
-                <div className="w-full lg:w-64 border-t lg:border-t-0 lg:border-l border-slate-100 pt-6 lg:pt-0 lg:pl-6 flex flex-col justify-start gap-3 shrink-0 text-right">
-                  <div className="flex flex-col gap-1.5 text-xs text-slate-500">
-                    <div className="flex justify-between items-center lg:justify-end lg:gap-3">
-                      <span>Items Subtotal:</span>
-                      <span className="font-semibold text-slate-800">৳{parseFloat(order.subtotal_amount).toFixed(2)}</span>
-                    </div>
-                    {parseFloat(order.total_discount_amount) > 0 && (
-                      <div className="flex justify-between items-center lg:justify-end lg:gap-3 text-rose-500">
-                        <span>Discount:</span>
-                        <span className="font-semibold">-৳{parseFloat(order.total_discount_amount).toFixed(2)}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between items-center lg:justify-end lg:gap-3">
-                      <span>Delivery Charge:</span>
-                      <span className="font-semibold text-slate-800">৳{parseFloat(order.delivery_charge).toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between items-center lg:justify-end lg:gap-3 border-t border-slate-100 pt-2 text-sm font-bold text-slate-800">
-                      <span>Total Invoice:</span>
-                      <span className="font-bold text-slate-900">৳{parseFloat(order.total_amount).toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between items-center lg:justify-end lg:gap-3 text-[11px]">
-                      <span>Paid Amount:</span>
-                      <span className="font-bold text-emerald-600">৳{(parseFloat(order.total_amount) - parseFloat(order.due_amount)).toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between items-center lg:justify-end lg:gap-3 text-[11px]">
-                      <span>Due Amount:</span>
-                      <span className="font-bold text-rose-600">৳{parseFloat(order.due_amount).toFixed(2)}</span>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 p-3 bg-emerald-50 border border-emerald-100 text-emerald-800 rounded-xl text-[11px] font-semibold text-left">
-                    ✓ COD Payment Collected
-                    <div className="text-[10px] text-slate-450 mt-1">Status: Completed / Paid</div>
-                  </div>
-                </div>
-              </div>
-            ))}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           </div>
         )}
       </div>

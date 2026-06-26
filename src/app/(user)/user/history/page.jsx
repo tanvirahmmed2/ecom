@@ -70,130 +70,84 @@ export default function UserHistoryPage() {
             </Link>
           </div>
         ) : (
-          <div className="flex flex-col gap-6">
-            {orders.map((order) => (
-              <div 
-                key={order.order_id} 
-                className="bg-white rounded-3xl border border-slate-100 p-6 flex flex-col gap-5 shadow-sm hover:shadow-md transition duration-300"
-              >
-                {/* Order Top Bar */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 pb-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-black text-slate-800">#ORD-{order.order_id}</span>
-                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                      order.status === 'delivered' ? 'bg-emerald-50 text-emerald-700' :
-                      ['cancelled', 'failed'].includes(order.status) ? 'bg-rose-50 text-rose-600' :
-                      order.status === 'returned' ? 'bg-amber-50 text-amber-700' :
-                      'bg-blue-50 text-blue-600'
-                    }`}>
-                      {order.status}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 flex-wrap text-xs font-semibold text-slate-455">
-                    <span>{new Date(order.created_at).toLocaleDateString()}</span>
-                    <Link 
-                      href={`/track-order?id=${order.order_id}`}
-                      className="px-3 py-1.5 border border-slate-200 hover:border-slate-350 rounded-xl flex items-center gap-1 hover:bg-slate-50 transition text-slate-650"
-                    >
-                      <BiSearch className="text-sm" /> Track Order
-                    </Link>
-                    <button 
-                      onClick={() => printReceipt(order, website)}
-                      className="px-3 py-1.5 border border-slate-200 hover:border-slate-350 rounded-xl flex items-center gap-1 hover:bg-slate-50 transition text-slate-650 cursor-pointer font-semibold"
-                    >
-                      <BiPrinter className="text-sm" /> Print Invoice
-                    </button>
-                  </div>
-                </div>
-
-                {/* Shipping info */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs bg-slate-50 p-4 rounded-2xl border border-slate-100/60">
-                  <div className="flex flex-col gap-1">
-                    <span className="font-bold text-slate-450 uppercase tracking-wide">Shipping Address</span>
-                    <span className="text-slate-655 font-medium">{order.shipping_address}, {order.shipping_city}</span>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="font-bold text-slate-450 uppercase tracking-wide">Contact Phone</span>
-                    <span className="text-slate-655 font-medium">{order.phone}</span>
-                  </div>
-                  {order.courier_name && (
-                    <div className="flex flex-col gap-1 col-span-1 md:col-span-2 border-t border-slate-200/40 pt-2">
-                      <span className="font-bold text-slate-450 uppercase tracking-wide">Courier Dispatch</span>
-                      <span className="text-slate-655 font-medium">
-                        {order.courier_name} {order.courier_tracking_id ? `(Tracking: ${order.courier_tracking_id})` : ''}
-                      </span>
-                    </div>
-                  )}
-                  {order.note && (
-                    <div className="flex flex-col gap-1 col-span-1 md:col-span-2 border-t border-slate-200/40 pt-2">
-                      <span className="font-bold text-slate-450 uppercase tracking-wide">Instructions</span>
-                      <span className="text-slate-600 italic font-medium">"{order.note}"</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Items loop */}
-                <div className="flex flex-col gap-2.5">
-                  <span className="text-xxs font-bold text-slate-400 uppercase tracking-widest">Ordered Items</span>
-                  <div className="flex flex-col border border-slate-100 rounded-2xl overflow-hidden divide-y divide-slate-100 text-xs bg-white">
-                    {order.items && order.items.map((item, idx) => (
-                      <div key={idx} className="flex items-center gap-3 p-3 bg-white hover:bg-slate-50/50 transition">
-                        {item.product_image && (
-                          <img 
-                            src={item.product_image} 
-                            alt={item.product_name} 
-                            className="w-8 h-8 object-cover rounded border border-slate-100 shrink-0"
-                          />
+          <div className="w-full overflow-x-auto bg-white border border-slate-150 rounded-2xl shadow-sm">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead className="bg-slate-100/80 text-slate-655 font-bold border-b border-slate-200">
+                <tr>
+                  <th className="px-4 py-3 text-center">Order ID</th>
+                  <th className="px-4 py-3">Date</th>
+                  <th className="px-4 py-3">Products</th>
+                  <th className="px-4 py-3">Shipping Address</th>
+                  <th className="px-4 py-3 text-right">Subtotal</th>
+                  <th className="px-4 py-3 text-right">Discount</th>
+                  <th className="px-4 py-3 text-right">Shipping Cost</th>
+                  <th className="px-4 py-3 text-right">Total Invoice</th>
+                  <th className="px-4 py-3 text-right">Paid</th>
+                  <th className="px-4 py-3 text-right">Due</th>
+                  <th className="px-4 py-3 text-center">Status</th>
+                  <th className="px-4 py-3 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-slate-700 bg-white">
+                {orders.map((order) => {
+                  const productsSummary = order.items
+                    ? order.items.map(item => `${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''} x${item.quantity}`).join(', ')
+                    : 'N/A'
+                  const paidAmount = parseFloat(order.total_amount) - parseFloat(order.due_amount)
+                  return (
+                    <tr key={order.order_id} className="hover:bg-slate-50/50 transition">
+                      <td className="px-4 py-3.5 text-center font-bold text-slate-850">#ORD-{order.order_id}</td>
+                      <td className="px-4 py-3.5 whitespace-nowrap text-slate-500">{new Date(order.created_at).toLocaleDateString()}</td>
+                      <td className="px-4 py-3.5 text-slate-500 max-w-[185px] truncate" title={productsSummary}>
+                        {productsSummary}
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <div className="font-semibold text-slate-805">{order.shipping_address}, {order.shipping_city}</div>
+                        <div className="text-[10px] text-slate-400 font-medium">{order.phone}</div>
+                        {order.courier_name && (
+                          <div className="text-[9px] text-slate-500 mt-0.5">Courier: {order.courier_name} {order.courier_tracking_id ? `(${order.courier_tracking_id})` : ''}</div>
                         )}
-                        <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+                        {order.note && (
+                          <div className="text-[9px] text-rose-500 italic mt-0.5" title={order.note}>Note: "{order.note}"</div>
+                        )}
+                      </td>
+                      <td className="px-4 py-3.5 text-right font-medium">৳{parseFloat(order.subtotal_amount).toFixed(2)}</td>
+                      <td className="px-4 py-3.5 text-right text-rose-500">৳{parseFloat(order.total_discount_amount).toFixed(2)}</td>
+                      <td className="px-4 py-3.5 text-right">৳{parseFloat(order.delivery_charge).toFixed(2)}</td>
+                      <td className="px-4 py-3.5 text-right font-bold text-slate-900">৳{parseFloat(order.total_amount).toFixed(2)}</td>
+                      <td className="px-4 py-3.5 text-right text-emerald-600 font-bold">৳{paidAmount.toFixed(2)}</td>
+                      <td className="px-4 py-3.5 text-right text-rose-600 font-bold">৳{parseFloat(order.due_amount).toFixed(2)}</td>
+                      <td className="px-4 py-3.5 text-center">
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                          order.status === 'delivered' ? 'bg-emerald-50 text-emerald-700' :
+                          ['cancelled', 'failed'].includes(order.status) ? 'bg-rose-50 text-rose-600' :
+                          order.status === 'returned' ? 'bg-amber-50 text-amber-700' :
+                          'bg-blue-50 text-blue-600'
+                        }`}>
+                          {order.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3.5 text-center">
+                        <div className="flex flex-col gap-1.5 justify-center items-center">
                           <Link 
-                            href={`/products/${item.slug}`} 
-                            className="font-bold text-slate-750 hover:text-emerald-600 transition truncate block"
+                            href={`/track-order?id=${order.order_id}`}
+                            className="w-24 py-1 border border-slate-205 border-slate-200 hover:border-slate-350 rounded text-[10px] font-bold text-slate-650 hover:bg-slate-50 transition text-center"
                           >
-                            {item.product_name}
+                            Track Order
                           </Link>
-                          {item.variant_name && <span className="text-[9px] text-slate-450 font-bold uppercase">Option: {item.variant_name}</span>}
+                          <button 
+                            onClick={() => printReceipt(order, website)}
+                            className="w-24 py-1 border border-slate-205 border-slate-200 hover:border-slate-350 rounded text-[10px] font-bold text-slate-650 hover:bg-slate-50 transition cursor-pointer"
+                          >
+                            Print Invoice
+                          </button>
                         </div>
-                        <div className="text-right shrink-0">
-                          <div className="font-bold text-slate-800">৳{(parseFloat(item.price) * item.quantity).toFixed(2)}</div>
-                          <div className="text-[10px] text-slate-400 mt-0.5">৳{parseFloat(item.price).toFixed(2)} x {item.quantity}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Price Summary */}
-                <div className="border-t border-slate-100 pt-4 flex flex-col gap-2 text-xs md:text-sm items-end text-right">
-                  <div className="flex justify-between items-center w-full max-w-xs text-slate-500">
-                    <span>Subtotal:</span>
-                    <span className="font-bold text-slate-800">৳{parseFloat(order.subtotal_amount).toFixed(2)}</span>
-                  </div>
-                  {parseFloat(order.total_discount_amount) > 0 && (
-                    <div className="flex justify-between items-center w-full max-w-xs text-rose-500">
-                      <span>Discount:</span>
-                      <span className="font-bold">-৳{parseFloat(order.total_discount_amount).toFixed(2)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between items-center w-full max-w-xs text-slate-500">
-                    <span>Delivery Charge:</span>
-                    <span className="font-bold text-slate-800">৳{parseFloat(order.delivery_charge).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between items-center w-full max-w-xs text-slate-800 border-t border-slate-100 pt-2 text-sm font-bold">
-                    <span>Total Invoice:</span>
-                    <span className="font-bold">৳{parseFloat(order.total_amount).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between items-center w-full max-w-xs text-slate-500 text-xs">
-                    <span>Paid Amount:</span>
-                    <span className="font-bold text-emerald-600">৳{(parseFloat(order.total_amount) - parseFloat(order.due_amount)).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between items-center w-full max-w-xs text-slate-500 text-xs">
-                    <span>Due Amount:</span>
-                    <span className="font-bold text-rose-600">৳{parseFloat(order.due_amount).toFixed(2)}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           </div>
         )}
       </div>

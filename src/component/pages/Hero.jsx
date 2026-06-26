@@ -6,29 +6,6 @@ import { Context } from '../helper/Context'
 import { BiShoppingBag, BiPurchaseTagAlt, BiTrendingUp } from 'react-icons/bi'
 import Image from 'next/image'
 
-const FALLBACK_PRODUCTS = [
-  {
-    product_id: 1,
-    name: 'Premium Designer Handbag',
-    sale_price: 129.99,
-    image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&auto=format&fit=crop&q=80',
-    slug: 'designer-handbag'
-  },
-  {
-    product_id: 2,
-    name: 'Classic Casual Wear',
-    sale_price: 79.99,
-    image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&auto=format&fit=crop&q=80',
-    slug: 'casual-wear'
-  },
-  {
-    product_id: 3,
-    name: 'Luxury Minimal Watch',
-    sale_price: 249.99,
-    image: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=800&auto=format&fit=crop&q=80',
-    slug: 'minimal-watch'
-  }
-]
 
 const Hero = () => {
   const { website } = useContext(Context)
@@ -37,7 +14,7 @@ const Hero = () => {
   const heroTitle = website?.hero_title || 'Discover Premium Quality Products'
   const heroSubtitle = website?.hero_subtitle || 'Shop our exclusive range of handpicked quality products at unbeatable prices.'
 
-  const [products, setProducts] = useState(FALLBACK_PRODUCTS)
+  const [products, setProducts] = useState([])
   const [currentSlide, setCurrentSlide] = useState(0)
 
   // Fetch active products, filter for on-sale items, shuffle and select top products
@@ -78,7 +55,7 @@ const Hero = () => {
     return () => clearInterval(timer)
   }, [products])
 
-  const activeProduct = products[currentSlide] || FALLBACK_PRODUCTS[0]
+  const activeProduct = products[currentSlide]
 
   return (
     <div className="relative w-full min-h-[85vh] flex items-center overflow-hidden bg-white px-6 py-20 md:py-28">
@@ -99,7 +76,7 @@ const Hero = () => {
       <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 md:gap-16 items-center relative z-10">
 
         {/* Left Column: Core Text Contents */}
-        <div className="lg:col-span-7 flex flex-col items-start text-left gap-6 animate-fade-in order-2 lg:order-1">
+        <div className={`${products.length > 0 ? 'lg:col-span-7' : 'lg:col-span-12'} flex flex-col items-start text-left gap-6 animate-fade-in order-2 lg:order-1`}>
 
           {/* Tagline Badge */}
           <span
@@ -154,49 +131,51 @@ const Hero = () => {
         </div>
 
         {/* Right Column: Sliding Portrait Frame */}
-        <div className="lg:col-span-5 flex justify-center relative order-1 lg:order-2">
+        {products.length > 0 && (
+          <div className="lg:col-span-5 flex justify-center relative order-1 lg:order-2">
 
-          {/* Glow backdrop specifically for the slider frame */}
-          <div
-            className="absolute -inset-4 rounded-[2.5rem] blur-[80px] opacity-[0.12] pointer-events-none z-0 transition-colors duration-1000"
-            style={{ backgroundColor: themeColor }}
-          />
+            {/* Glow backdrop specifically for the slider frame */}
+            <div
+              className="absolute -inset-4 rounded-[2.5rem] blur-[80px] opacity-[0.12] pointer-events-none z-0 transition-colors duration-1000"
+              style={{ backgroundColor: themeColor }}
+            />
 
-          <div className="relative w-full  aspect-4/5 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 shadow-[0_20px_40px_rgba(15,23,42,0.06)] z-10 group">
-            {/* Slide Images */}
-            {products.map((item, idx) => (
-              <Image width={1000} height={1000}
-                key={idx}
-                src={item.image}
-                alt={item.name}
-                className={`absolute inset-0 w-full h-full object-cover transition-all duration-1200 ease-in-out select-none pointer-events-none ${idx === currentSlide ? 'opacity-90 scale-100' : 'opacity-0 scale-105'
-                  }`}
-              />
-            ))}
+            <div className="relative w-full  aspect-4/5 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 shadow-[0_20px_40px_rgba(15,23,42,0.06)] z-10 group">
+              {/* Slide Images */}
+              {products.map((item, idx) => (
+                <Image width={1000} height={1000}
+                  key={idx}
+                  src={item.image}
+                  alt={item.name}
+                  className={`absolute inset-0 w-full h-full object-cover transition-all duration-1200 ease-in-out select-none pointer-events-none ${idx === currentSlide ? 'opacity-90 scale-100' : 'opacity-0 scale-105'
+                    }`}
+                />
+              ))}
 
-            <div className="absolute inset-0 bg-linear-to-t from-white/40 via-transparent to-transparent z-10" />
+              <div className="absolute inset-0 bg-linear-to-t from-white/40 via-transparent to-transparent z-10" />
 
-            {activeProduct && (
-              <Link
-                href={`/products/${activeProduct.slug}`}
-                className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-md border border-slate-200/80 p-3 rounded-2xl flex items-center justify-between z-20 hover:border-slate-300/80 shadow-sm transition duration-300"
-              >
-                <div className="min-w-0 pr-2">
-                  <span className="text-[9px] uppercase tracking-wider font-extrabold" style={{ color: themeColor }}>Featured</span>
-                  <h4 className="text-xs font-bold text-slate-800 truncate">{activeProduct.name}</h4>
-                </div>
-                <span className="text-[11px] font-black text-white px-2.5 py-1.5 rounded-xl shrink-0 flex items-center justify-center" style={{ backgroundColor: themeColor }}>
-                  ৳{parseFloat(activeProduct.sale_price).toFixed(2)}
-                </span>
-              </Link>
-            )}
+              {activeProduct && (
+                <Link
+                  href={`/products/${activeProduct.slug}`}
+                  className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-md border border-slate-200/80 p-3 rounded-2xl flex items-center justify-between z-20 hover:border-slate-300/80 shadow-sm transition duration-300"
+                >
+                  <div className="min-w-0 pr-2">
+                    <span className="text-[9px] uppercase tracking-wider font-extrabold" style={{ color: themeColor }}>Featured</span>
+                    <h4 className="text-xs font-bold text-slate-800 truncate">{activeProduct.name}</h4>
+                  </div>
+                  <span className="text-[11px] font-black text-white px-2.5 py-1.5 rounded-xl shrink-0 flex items-center justify-center" style={{ backgroundColor: themeColor }}>
+                    ৳{parseFloat(activeProduct.sale_price).toFixed(2)}
+                  </span>
+                </Link>
+              )}
+            </div>
+
+            {/* Background decorative shape */}
+            <div className="absolute -bottom-8 -left-8 w-24 h-24 border-l-2 border-b-2 border-slate-200 rounded-bl-[1.5rem] pointer-events-none z-0" />
+            <div className="absolute -top-8 -right-8 w-24 h-24 border-r-2 border-t-2 border-slate-200 rounded-tr-[1.5rem] pointer-events-none z-0" />
+
           </div>
-
-          {/* Background decorative shape */}
-          <div className="absolute -bottom-8 -left-8 w-24 h-24 border-l-2 border-b-2 border-slate-200 rounded-bl-[1.5rem] pointer-events-none z-0" />
-          <div className="absolute -top-8 -right-8 w-24 h-24 border-r-2 border-t-2 border-slate-200 rounded-tr-[1.5rem] pointer-events-none z-0" />
-
-        </div>
+        )}
 
       </div>
 

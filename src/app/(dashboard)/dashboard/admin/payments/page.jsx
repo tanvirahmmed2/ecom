@@ -100,72 +100,48 @@ export default function AdminPaymentsPage() {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredPayments.map((pay) => (
-              <div 
-                key={pay.payment_id}
-                className="bg-white rounded-3xl border border-slate-100 p-6 flex flex-col justify-between gap-5 shadow-sm hover:shadow-md transition duration-300"
-              >
-                <div className="flex justify-between items-start border-b border-slate-100 pb-3">
-                  <div className="flex flex-col gap-0.5 text-left">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Receipt No</span>
-                    <span className="font-bold text-slate-800 text-xs md:text-sm">#PAY-REC-{pay.payment_id}</span>
-                  </div>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700" style={{ color: themeColor, backgroundColor: themeColor + '10' }}>
-                    {pay.payment_status}
-                  </span>
-                </div>
-
-                <div className="flex flex-col gap-2.5 text-xs text-slate-600 font-medium">
-                  <div className="flex justify-between items-center text-left">
-                    <span className="text-slate-450 font-bold uppercase tracking-wide text-[10px]">Settled Amount:</span>
-                    <span className="text-base font-black" style={{ color: themeColor }}>৳{parseFloat(pay.amount).toFixed(2)}</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center border-t border-slate-100 pt-2">
-                    <span className="text-slate-450 flex items-center gap-1 font-bold"><BiPackage /> Order Ref:</span>
-                    <Link href={`/track-order?id=${pay.order_id}`} target="_blank" className="font-bold text-slate-850 hover:underline">
-                      #ORD-{pay.order_id}
-                    </Link>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-455 flex items-center gap-1 font-bold"><BiUser /> Customer:</span>
-                    <span className="font-bold text-slate-800 truncate max-w-[140px]">{pay.customer_name || 'Guest'}</span>
-                  </div>
-
-                  {pay.order_phone && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-455 font-bold">Contact:</span>
-                      <span className="font-semibold text-slate-700">{pay.order_phone}</span>
-                    </div>
-                  )}
-
-                  {pay.sample_product_name && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-455 font-bold">Sample Product:</span>
-                      <span className="font-medium text-slate-600 line-clamp-1 max-w-[130px]" title={pay.sample_product_name}>{pay.sample_product_name}</span>
-                    </div>
-                  )}
-
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-455 font-bold">Method:</span>
-                    <span className="font-bold text-slate-800 uppercase">{pay.payment_method}</span>
-                  </div>
-
-                  <div className="flex justify-between items-center border-t border-slate-100 pt-2">
-                    <span className="text-slate-455 flex items-center gap-1 font-bold"><BiCalendar /> Date Logged:</span>
-                    <span className="text-slate-500 font-semibold">{new Date(pay.paid_at).toLocaleString()}</span>
-                  </div>
-                </div>
-
-                {pay.note && (
-                  <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl text-[10px] text-slate-500 italic text-left">
-                    "{pay.note}"
-                  </div>
-                )}
-              </div>
-            ))}
+          <div className="w-full overflow-x-auto bg-white border border-slate-150 rounded-2xl shadow-sm">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead className="bg-slate-100/80 text-slate-655 font-bold border-b border-slate-200">
+                <tr>
+                  <th className="px-4 py-3 text-center">Receipt ID</th>
+                  <th className="px-4 py-3">Date Logged</th>
+                  <th className="px-4 py-3 text-center">Order Ref</th>
+                  <th className="px-4 py-3">Customer Details</th>
+                  <th className="px-4 py-3">Sample Product</th>
+                  <th className="px-4 py-3 text-center">Method</th>
+                  <th className="px-4 py-3 text-right">Settled Amount</th>
+                  <th className="px-4 py-3 text-center">Status</th>
+                  <th className="px-4 py-3">Note</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-slate-700 bg-white">
+                {filteredPayments.map((pay) => (
+                  <tr key={pay.payment_id} className="hover:bg-slate-50/50 transition">
+                    <td className="px-4 py-3.5 text-center font-bold text-slate-500">#PAY-REC-{pay.payment_id}</td>
+                    <td className="px-4 py-3.5 whitespace-nowrap text-slate-500">{new Date(pay.paid_at).toLocaleString()}</td>
+                    <td className="px-4 py-3.5 text-center font-bold text-slate-850">
+                      <Link href={`/track-order?id=${pay.order_id}`} target="_blank" className="hover:underline text-slate-900 cursor-pointer">
+                        #ORD-{pay.order_id}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <div className="font-semibold text-slate-855">{pay.customer_name || 'Guest'}</div>
+                      <div className="text-[10px] text-slate-400 font-medium">{pay.order_phone || 'N/A'}</div>
+                    </td>
+                    <td className="px-4 py-3.5 text-slate-500 max-w-[150px] truncate" title={pay.sample_product_name || 'In-store Items'}>{pay.sample_product_name || 'In-store Items'}</td>
+                    <td className="px-4 py-3.5 text-center"><span className="px-2 py-0.5 rounded bg-slate-50 text-slate-700 font-bold uppercase text-[9px] border border-slate-150">{pay.payment_method}</span></td>
+                    <td className="px-4 py-3.5 text-right font-black text-emerald-600">৳{parseFloat(pay.amount).toFixed(2)}</td>
+                    <td className="px-4 py-3.5 text-center">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700" style={{ color: themeColor, backgroundColor: themeColor + '10' }}>
+                        {pay.payment_status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3.5 text-slate-500 italic max-w-[150px] truncate" title={pay.note}>{pay.note ? `"${pay.note}"` : '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>

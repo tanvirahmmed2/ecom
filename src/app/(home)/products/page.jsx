@@ -26,7 +26,6 @@ export default function ProductsPage() {
 
   // Filters, Category Selection, & Sorting State
   const [selectedCategoryId, setSelectedCategoryId] = useState(null)
-  const [searchTerm, setSearchTerm] = useState('')
   const [sortBy, setSortBy] = useState('newest')
   const [minPrice, setMinPrice] = useState('')
   const [maxPrice, setMaxPrice] = useState('')
@@ -56,7 +55,7 @@ export default function ProductsPage() {
   // Reset pagination to page 1 whenever any filter parameter changes
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchTerm, sortBy, minPrice, maxPrice, inStockOnly, selectedCategoryId])
+  }, [sortBy, minPrice, maxPrice, inStockOnly, selectedCategoryId])
 
   // Get active parent category object if selected
   const activeParentCat = categories.find(c => c.id === selectedCategoryId)
@@ -79,11 +78,7 @@ export default function ProductsPage() {
   // Filter & Sort Logic
   const filteredProducts = products
     .filter(p => {
-      // 1. Search term match
-      const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        (p.description && p.description.toLowerCase().includes(searchTerm.toLowerCase()))
-      
-      // 2. Category & Subcategory match
+      // 1. Category & Subcategory match
       let matchesCategory = true
       if (selectedCategoryId) {
         if (activeParentCat) {
@@ -96,7 +91,7 @@ export default function ProductsPage() {
         }
       }
 
-      // 3. Price Range match
+      // 2. Price Range match
       const finalPrice = p.discount_price && parseFloat(p.discount_price) > 0 
         ? Math.max(0, parseFloat(p.sale_price) - parseFloat(p.discount_price)) 
         : parseFloat(p.sale_price)
@@ -105,7 +100,7 @@ export default function ProductsPage() {
 
       const matchesStock = !inStockOnly || ((p.total_stock !== undefined ? parseInt(p.total_stock, 10) : parseInt(p.stock, 10)) > 0)
 
-      return matchesSearch && matchesCategory && matchesMin && matchesMax && matchesStock
+      return matchesCategory && matchesMin && matchesMax && matchesStock
     })
     .sort((a, b) => {
       const priceA = a.discount_price && parseFloat(a.discount_price) > 0 ? Math.max(0, parseFloat(a.sale_price) - parseFloat(a.discount_price)) : parseFloat(a.sale_price)
@@ -194,20 +189,7 @@ export default function ProductsPage() {
               <BiFilterAlt className="text-emerald-600 text-base" /> Filters
             </h3>
 
-            {/* Keyword Search */}
-            <div className="flex flex-col gap-2">
-              <label className="text-xs font-bold text-slate-500">Search Products</label>
-              <div className="relative">
-                <BiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-base" />
-                <input
-                  type="text"
-                  placeholder="Type to search..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition"
-                />
-              </div>
-            </div>
+
 
             {/* Price Range */}
             <div className="flex flex-col gap-2">
@@ -295,10 +277,9 @@ export default function ProductsPage() {
             </div>
 
             {/* Clear All Filters */}
-            {(searchTerm || minPrice || maxPrice || inStockOnly || selectedCategoryId) && (
+            {(minPrice || maxPrice || inStockOnly || selectedCategoryId) && (
               <button
                 onClick={() => {
-                  setSearchTerm('')
                   setMinPrice('')
                   setMaxPrice('')
                   setInStockOnly(false)
