@@ -4,6 +4,7 @@ import Link from 'next/link'
 import axios from 'axios'
 import { Context } from '../helper/Context'
 import { BiShoppingBag, BiPurchaseTagAlt, BiTrendingUp } from 'react-icons/bi'
+import Image from 'next/image'
 
 const FALLBACK_PRODUCTS = [
   {
@@ -80,18 +81,18 @@ const Hero = () => {
   const activeProduct = products[currentSlide] || FALLBACK_PRODUCTS[0]
 
   return (
-    <div className="relative w-full min-h-[85vh] flex items-center overflow-hidden bg-slate-950 px-6 py-20 md:py-28">
+    <div className="relative w-full min-h-[85vh] flex items-center overflow-hidden bg-white px-6 py-20 md:py-28">
 
       {/* Background Grid Pattern */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff02_1px,transparent_1px),linear-gradient(to_bottom,#ffffff02_1px,transparent_1px)] bg-[size:3rem_3rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none z-0" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#0f172a05_1px,transparent_1px),linear-gradient(to_bottom,#0f172a05_1px,transparent_1px)] bg-[size:3rem_3rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none z-0" />
 
       {/* Ambient background blur glows */}
       <div
-        className="absolute top-1/4 left-[-10%] w-[400px] h-[400px] rounded-full blur-[130px] opacity-15 pointer-events-none z-0"
+        className="absolute top-1/4 left-[-10%] w-[400px] h-[400px] rounded-full blur-[130px] opacity-[0.06] pointer-events-none z-0"
         style={{ backgroundColor: themeColor }}
       />
       <div
-        className="absolute bottom-1/4 right-[-10%] w-[500px] h-[500px] rounded-full blur-[140px] opacity-10 pointer-events-none z-0"
+        className="absolute bottom-1/4 right-[-10%] w-[500px] h-[500px] rounded-full blur-[140px] opacity-[0.04] pointer-events-none z-0"
         style={{ backgroundColor: themeColor }}
       />
 
@@ -102,15 +103,15 @@ const Hero = () => {
 
           {/* Tagline Badge */}
           <span
-            className="px-4 py-1.5 text-[10px] md:text-xs font-black uppercase tracking-wider rounded-full border bg-white/5 backdrop-blur-md shadow-inner select-none flex items-center gap-2"
-            style={{ borderColor: `${themeColor}40`, color: themeColor }}
+            className="px-4 py-1.5 text-[10px] md:text-xs font-black uppercase tracking-wider rounded-full border bg-slate-50 border-slate-200/60 shadow-sm select-none flex items-center gap-2"
+            style={{ borderColor: `${themeColor}25`, color: themeColor }}
           >
             <BiTrendingUp className="text-sm" />
             <span>{tagline}</span>
           </span>
 
           {/* Title */}
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.1] max-w-2xl">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-slate-900 tracking-tight leading-[1.1] max-w-2xl">
             {heroTitle.split(' ').map((word, i) => {
               // Highlight selected keywords
               if (i === 1 || i === 2) {
@@ -118,7 +119,7 @@ const Hero = () => {
                   <span
                     key={i}
                     className="bg-clip-text text-transparent bg-gradient-to-r"
-                    style={{ backgroundImage: `linear-gradient(to right, ${themeColor}, #ffffff)` }}
+                    style={{ backgroundImage: `linear-gradient(to right, ${themeColor}, #0f172a)` }}
                   >
                     {word}{' '}
                   </span>
@@ -129,7 +130,7 @@ const Hero = () => {
           </h1>
 
           {/* Subtitle */}
-          <p className="text-slate-400 text-sm md:text-base max-w-xl leading-relaxed font-medium">
+          <p className="text-slate-600 text-sm md:text-base max-w-xl leading-relaxed font-medium">
             {heroSubtitle}
           </p>
 
@@ -144,7 +145,7 @@ const Hero = () => {
             </Link>
             <Link
               href="/offers"
-              className="px-8 py-4 bg-white/5 hover:bg-white/10 text-white font-bold text-sm rounded-2xl border border-white/10 hover:border-white/20 transition-all flex items-center justify-center gap-2 cursor-pointer backdrop-blur-md hover:scale-[1.03] active:scale-[0.97]"
+              className="px-8 py-4 bg-white hover:bg-slate-50 text-slate-800 font-bold text-sm rounded-2xl border border-slate-200 shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.03] active:scale-[0.97]"
             >
               <BiPurchaseTagAlt className="text-lg" /> View Offers
             </Link>
@@ -157,34 +158,32 @@ const Hero = () => {
 
           {/* Glow backdrop specifically for the slider frame */}
           <div
-            className="absolute -inset-4 rounded-[2.5rem] blur-[80px] opacity-25 pointer-events-none z-0 transition-colors duration-1000"
+            className="absolute -inset-4 rounded-[2.5rem] blur-[80px] opacity-[0.12] pointer-events-none z-0 transition-colors duration-1000"
             style={{ backgroundColor: themeColor }}
           />
 
-          <div className="relative w-full max-w-[340px] aspect-[4/5] rounded-[2rem] overflow-hidden border border-white/15 shadow-[0_20px_50px_rgba(0,0,0,0.5)] bg-slate-900 z-10 group">
+          <div className="relative w-full  aspect-4/5 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 shadow-[0_20px_40px_rgba(15,23,42,0.06)] z-10 group">
             {/* Slide Images */}
             {products.map((item, idx) => (
-              <img
+              <Image width={1000} height={1000}
                 key={idx}
                 src={item.image}
                 alt={item.name}
-                className={`absolute inset-0 w-full h-full object-cover transition-all duration-[1200ms] ease-in-out select-none pointer-events-none ${idx === currentSlide ? 'opacity-90 scale-100' : 'opacity-0 scale-105'
+                className={`absolute inset-0 w-full h-full object-cover transition-all duration-1200 ease-in-out select-none pointer-events-none ${idx === currentSlide ? 'opacity-90 scale-100' : 'opacity-0 scale-105'
                   }`}
               />
             ))}
 
-            {/* Gradient shadow overlay for the slide footer */}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent z-10" />
+            <div className="absolute inset-0 bg-linear-to-t from-white/40 via-transparent to-transparent z-10" />
 
-            {/* Floating Info overlay card */}
             {activeProduct && (
               <Link
                 href={`/products/${activeProduct.slug}`}
-                className="absolute bottom-4 left-4 right-4 bg-slate-900/85 backdrop-blur-md border border-white/10 p-3 rounded-2xl flex items-center justify-between z-20 hover:border-white/25 transition duration-300"
+                className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-md border border-slate-200/80 p-3 rounded-2xl flex items-center justify-between z-20 hover:border-slate-300/80 shadow-sm transition duration-300"
               >
                 <div className="min-w-0 pr-2">
                   <span className="text-[9px] uppercase tracking-wider font-extrabold" style={{ color: themeColor }}>Featured</span>
-                  <h4 className="text-xs font-bold text-white truncate">{activeProduct.name}</h4>
+                  <h4 className="text-xs font-bold text-slate-800 truncate">{activeProduct.name}</h4>
                 </div>
                 <span className="text-[11px] font-black text-white px-2.5 py-1.5 rounded-xl shrink-0 flex items-center justify-center" style={{ backgroundColor: themeColor }}>
                   ৳{parseFloat(activeProduct.sale_price).toFixed(2)}
@@ -194,8 +193,8 @@ const Hero = () => {
           </div>
 
           {/* Background decorative shape */}
-          <div className="absolute -bottom-8 -left-8 w-24 h-24 border-l-2 border-b-2 border-white/10 rounded-bl-[1.5rem] pointer-events-none z-0" />
-          <div className="absolute -top-8 -right-8 w-24 h-24 border-r-2 border-t-2 border-white/10 rounded-tr-[1.5rem] pointer-events-none z-0" />
+          <div className="absolute -bottom-8 -left-8 w-24 h-24 border-l-2 border-b-2 border-slate-200 rounded-bl-[1.5rem] pointer-events-none z-0" />
+          <div className="absolute -top-8 -right-8 w-24 h-24 border-r-2 border-t-2 border-slate-200 rounded-tr-[1.5rem] pointer-events-none z-0" />
 
         </div>
 
