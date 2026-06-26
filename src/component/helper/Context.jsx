@@ -58,9 +58,9 @@ const ContextProvider = ({ children }) => {
             items.push({
                 product_id: product.product_id,
                 name: product.name,
-                image: product.image,
-                sale_price: variant ? parseFloat(product.sale_price) + parseFloat(variant.price) : parseFloat(product.sale_price),
-                discount_price: parseFloat(product.discount_price || 0),
+                image: variant && variant.image ? variant.image : product.image,
+                sale_price: variant ? parseFloat(variant.sale_price) : parseFloat(product.sale_price),
+                discount_price: variant ? parseFloat(variant.discount_price || 0) : parseFloat(product.discount_price || 0),
                 variant: variantName,
                 variant_id: variantId,
                 quantity: qty,

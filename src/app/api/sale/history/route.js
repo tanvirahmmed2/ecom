@@ -22,7 +22,7 @@ export async function GET(req) {
                  'quantity', oi.quantity,
                  'price', oi.price,
                  'product_name', p.name,
-                 'product_image', p.image,
+                 'product_image', COALESCE(pv.image, (SELECT image FROM product_variants WHERE product_id = p.product_id ORDER BY variant_id ASC LIMIT 1)),
                  'variant_name', pv.variant_name
               )) FROM order_items oi
               JOIN products p ON oi.product_id = p.product_id

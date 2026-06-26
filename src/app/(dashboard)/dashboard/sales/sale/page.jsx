@@ -558,7 +558,7 @@ export default function POSPageClean() {
                 <BiSearch className="absolute left-3 top-2.5 text-slate-400 text-base" />
                 <input
                   type="text"
-                  placeholder="Search catalog by title, brand, or SKU..."
+                  placeholder="Search catalog by title, brand, or barcode..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-9 pr-4 py-2 border border-slate-200 bg-white rounded-lg text-xs focus:outline-none focus:border-slate-350 transition text-slate-800"
@@ -686,8 +686,8 @@ export default function POSPageClean() {
             </div>
 
             <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
-              {productVariants.map((v) => {
-                const vPrice = parseFloat(selectedProduct.sale_price) + parseFloat(v.price)
+              {productVariants.filter(v => v.is_active !== false).map((v) => {
+                const vPrice = parseFloat(selectedProduct.sale_price) + parseFloat(v.price || v.sale_price || 0)
                 const discountAmt = parseFloat(selectedProduct.discount_price || 0)
                 const finalVPrice = Math.max(0, vPrice - discountAmt)
                 const inStock = parseInt(v.stock, 10) > 0

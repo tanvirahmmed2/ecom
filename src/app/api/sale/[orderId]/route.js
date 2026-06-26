@@ -14,7 +14,7 @@ export async function GET(req, { params }) {
                  'quantity', oi.quantity,
                  'price', oi.price,
                  'product_name', p.name,
-                 'product_image', p.image,
+                 'product_image', COALESCE(pv.image, (SELECT image FROM product_variants WHERE product_id = p.product_id ORDER BY variant_id ASC LIMIT 1)),
                  'variant_name', pv.variant_name
               )) FROM order_items oi
               JOIN products p ON oi.product_id = p.product_id
@@ -95,15 +95,24 @@ export async function PUT(req, { params }) {
             throw new Error(`Insufficient stock for variant "${updateRes.rows[0].variant_name}"`);
           }
         } else {
-          const updateRes = await client.query(
-            `UPDATE products 
-             SET stock = stock - $1 
-             WHERE product_id = $2 
-             RETURNING stock, name`,
-            [item.quantity, item.product_id]
+          const defaultVarRes = await client.query(
+            `SELECT variant_id FROM product_variants WHERE product_id = $1 ORDER BY variant_id ASC LIMIT 1`,
+            [item.product_id]
           );
-          if (updateRes.rows.length > 0 && updateRes.rows[0].stock < 0) {
-            throw new Error(`Insufficient stock for product "${updateRes.rows[0].name}"`);
+          if (defaultVarRes.rows.length > 0) {
+            const targetVarId = defaultVarRes.rows[0].variant_id;
+            const updateRes = await client.query(
+              `UPDATE product_variants 
+               SET stock = stock - $1 
+               WHERE variant_id = $2 
+               RETURNING stock, variant_name AS name`,
+              [item.quantity, targetVarId]
+            );
+            if (updateRes.rows.length > 0 && updateRes.rows[0].stock < 0) {
+              throw new Error(`Insufficient stock for product variant`);
+            }
+          } else {
+            throw new Error(`Default variant not found for product ID ${item.product_id}`);
           }
         }
       }
@@ -123,12 +132,19 @@ export async function PUT(req, { params }) {
             [item.quantity, item.variant_id]
           );
         } else {
-          await client.query(
-            `UPDATE products 
-             SET stock = stock + $1 
-             WHERE product_id = $2`,
-            [item.quantity, item.product_id]
+          const defaultVarRes = await client.query(
+            `SELECT variant_id FROM product_variants WHERE product_id = $1 ORDER BY variant_id ASC LIMIT 1`,
+            [item.product_id]
           );
+          if (defaultVarRes.rows.length > 0) {
+            const targetVarId = defaultVarRes.rows[0].variant_id;
+            await client.query(
+              `UPDATE product_variants 
+               SET stock = stock + $1 
+               WHERE variant_id = $2`,
+              [item.quantity, targetVarId]
+            );
+          }
         }
       }
     };

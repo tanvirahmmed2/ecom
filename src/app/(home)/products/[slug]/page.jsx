@@ -35,9 +35,9 @@ export default function ProductDetailPage() {
       try {
         const res = await axios.get(`/api/product/${slug}`)
         setProduct(res.data)
-        // Auto select first variant if available
-        if (res.data.variants && res.data.variants.length > 0) {
-          setSelectedVariant(res.data.variants[0])
+        const activeVariants = (res.data.variants || []).filter(v => v.is_active !== false)
+        if (activeVariants.length > 0) {
+          setSelectedVariant(activeVariants[0])
         }
       } catch (err) {
         console.error('Failed to load product details:', err)
@@ -73,23 +73,53 @@ export default function ProductDetailPage() {
     )
   }
 
-  const hasDiscount = product.discount_price && parseFloat(product.discount_price) > 0
+  const hasDiscount = selectedVariant 
+    ? (selectedVariant.discount_price && parseFloat(selectedVariant.discount_price) > 0)
+    : (product.discount_price && parseFloat(product.discount_price) > 0);
 
   const basePrice = selectedVariant 
     ? (hasDiscount
-        ? Math.max(0, (parseFloat(product.sale_price) + parseFloat(selectedVariant.price)) - parseFloat(product.discount_price))
-        : (parseFloat(product.sale_price) + parseFloat(selectedVariant.price)))
+        ? Math.max(0, parseFloat(selectedVariant.sale_price) - parseFloat(selectedVariant.discount_price))
+        : parseFloat(selectedVariant.sale_price))
     : (hasDiscount
         ? Math.max(0, parseFloat(product.sale_price) - parseFloat(product.discount_price))
-        : parseFloat(product.sale_price))
+        : parseFloat(product.sale_price));
 
   const originalPrice = selectedVariant
-    ? (parseFloat(product.sale_price) + parseFloat(selectedVariant.price))
-    : parseFloat(product.sale_price)
+    ? parseFloat(selectedVariant.sale_price)
+    : parseFloat(product.sale_price);
 
   const currentStock = selectedVariant 
     ? parseInt(selectedVariant.stock, 10) 
     : parseInt(product.stock, 10) || 0
+
+  const displayImage = (selectedVariant && selectedVariant.image) 
+    ? selectedVariant.image 
+    : (product.image || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&auto=format&fit=crop&q=60');
+
+  // Deduplicate variant thumbnails for the gallery row
+  const uniqueThumbnails = [];
+  const seenUrls = new Set();
+  
+  if (product.image) {
+    uniqueThumbnails.push({
+      type: 'product',
+      url: product.image,
+      variant: (product.variants || []).find(v => v.variant_name === 'Default') || null
+    });
+    seenUrls.add(product.image);
+  }
+  
+  (product.variants || []).filter(v => v.is_active !== false && v.image).forEach(v => {
+    if (!seenUrls.has(v.image)) {
+      uniqueThumbnails.push({
+        type: 'variant',
+        url: v.image,
+        variant: v
+      });
+      seenUrls.add(v.image);
+    }
+  });
 
   const handleAddToCart = () => {
     addToCart(product, selectedVariant, quantity)
@@ -121,13 +151,40 @@ export default function ProductDetailPage() {
           
           {/* Image Gallery Column */}
           <div className="md:col-span-6 flex flex-col gap-4">
-            <div className="aspect-square w-full rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 flex items-center justify-center">
+            <div className="aspect-square w-full rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 flex items-center justify-center shadow-sm">
               <img
-                src={product.image || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&auto=format&fit=crop&q=60'}
+                src={displayImage}
                 alt={product.name}
-                className="object-cover w-full h-full"
+                className="object-cover w-full h-full transition duration-300 ease-in-out"
               />
             </div>
+
+            {/* Unique Thumbnail Row */}
+            {uniqueThumbnails.length > 1 && (
+              <div className="flex flex-wrap gap-2 py-1">
+                {uniqueThumbnails.map((item, index) => {
+                  const isCurrent = displayImage === item.url;
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        if (item.variant) {
+                          setSelectedVariant(item.variant);
+                        }
+                      }}
+                      className={`w-14 h-14 rounded-xl border-2 overflow-hidden bg-slate-50 flex items-center justify-center shrink-0 transition cursor-pointer ${
+                        isCurrent 
+                          ? 'border-emerald-500 shadow-sm'
+                          : 'border-slate-150 hover:border-slate-300'
+                      }`}
+                      style={isCurrent ? { borderColor: themeColor } : {}}
+                    >
+                      <img src={item.url} alt="product thumbnail" className="object-cover w-full h-full" />
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Details & Config Column */}
@@ -174,12 +231,10 @@ export default function ProductDetailPage() {
             {/* Variants Selector */}
             {product.variants && product.variants.length > 0 && (
               <div className="flex flex-col gap-2.5">
-                <span className="text-xs font-bold text-slate-500">Select Options</span>
+                <span className="text-xs font-bold text-slate-550">Select Options</span>
                 <div className="flex flex-wrap gap-2">
-                  {product.variants.map((v) => {
+                  {product.variants.filter(v => v.is_active !== false).map((v) => {
                     const isSelected = selectedVariant?.variant_id === v.variant_id
-                    const variantBasePrice = parseFloat(product.sale_price) + parseFloat(v.price)
-                    const variantFinalPrice = hasDiscount ? Math.max(0, variantBasePrice - parseFloat(product.discount_price)) : variantBasePrice
                     return (
                       <button
                         key={v.variant_id}
@@ -187,11 +242,11 @@ export default function ProductDetailPage() {
                         className={`px-4 py-2 border rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
                           isSelected 
                             ? 'border-emerald-600 bg-emerald-50 text-emerald-700 shadow-sm'
-                            : 'border-slate-200 bg-white text-slate-650 hover:bg-slate-50 hover:border-slate-350'
+                            : 'border-slate-200 bg-white text-slate-655 hover:bg-slate-50 hover:border-slate-350'
                         }`}
                         style={isSelected ? { borderColor: themeColor, color: themeColor } : {}}
                       >
-                        {v.variant_name} (৳{variantFinalPrice.toFixed(2)})
+                        {v.variant_name}
                       </button>
                     )
                   })}

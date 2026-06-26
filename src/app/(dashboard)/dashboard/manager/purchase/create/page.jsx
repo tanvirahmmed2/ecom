@@ -360,7 +360,14 @@ export default function PurchaseCreatePage() {
                             <select
                               value={row.variant_id}
                               required
-                              onChange={(e) => updateRow(index, { variant_id: e.target.value })}
+                              onChange={(e) => {
+                                const selectedId = e.target.value;
+                                const matchedVar = row.variants.find(v => v.variant_id.toString() === selectedId);
+                                updateRow(index, { 
+                                  variant_id: selectedId,
+                                  purchase_price: matchedVar ? (matchedVar.purchase_price || 0) : row.purchase_price
+                                });
+                              }}
                               className="w-full px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 text-xs focus:bg-white outline-none"
                             >
                               <option value="">-- Select Variant --</option>

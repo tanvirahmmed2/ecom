@@ -11,7 +11,14 @@ import {
   BiTrendingUp, 
   BiCategory, 
   BiDollarCircle, 
-  BiCreditCard 
+  BiCreditCard,
+  BiDownload,
+  BiUser,
+  BiReceipt,
+  BiPackage,
+  BiCart,
+  BiBarcode,
+  BiCloudDownload
 } from 'react-icons/bi'
 
 export default function ManagerReportPage() {
@@ -24,6 +31,85 @@ export default function ManagerReportPage() {
     paymentBreakdown: []
   })
   const [loading, setLoading] = useState(true)
+  const [exporting, setExporting] = useState({
+    customers: false,
+    payments: false,
+    purchases: false,
+    sales: false,
+    products: false
+  })
+
+  const handleExport = async (type) => {
+    setExporting(prev => ({ ...prev, [type]: true }))
+    try {
+      const response = await axios.get(`/api/report/export?type=${type}`, {
+        responseType: 'blob'
+      })
+      const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      
+      const disposition = response.headers['content-disposition']
+      let filename = `${type}_report_${Date.now()}.xlsx`
+      if (disposition && disposition.indexOf('attachment') !== -1) {
+        const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+        const matches = filenameRegex.exec(disposition)
+        if (matches != null && matches[1]) { 
+          filename = matches[1].replace(/['"]/g, '')
+        }
+      }
+      
+      link.setAttribute('download', filename)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error(`Failed to export ${type}:`, error)
+      alert(`Failed to export ${type} data. Please try again.`)
+    } finally {
+      setExporting(prev => ({ ...prev, [type]: false }))
+    }
+  }
+
+  const exportCards = [
+    {
+      type: 'customers',
+      title: 'Customer Directory',
+      description: 'Profiles, contact phones, emails, shipping addresses, and registration dates.',
+      gradient: 'from-blue-500 to-indigo-500',
+      icon: BiUser,
+    },
+    {
+      type: 'payments',
+      title: 'Payment Transactions',
+      description: 'Billing receipts, methods, transaction IDs, received amounts, and status.',
+      gradient: 'from-emerald-500 to-teal-500',
+      icon: BiReceipt,
+    },
+    {
+      type: 'purchases',
+      title: 'Purchase Audits',
+      description: 'Supply logs, supplier details, discounts, payments, and balances.',
+      gradient: 'from-amber-500 to-orange-500',
+      icon: BiPackage,
+    },
+    {
+      type: 'sales',
+      title: 'Sales Invoices',
+      description: 'Customer order logs, items, shipping details, totals, and due amounts.',
+      gradient: 'from-purple-500 to-violet-500',
+      icon: BiCart,
+    },
+    {
+      type: 'products',
+      title: 'Product Stock',
+      description: 'Catalog items, barcode, pricing structures, category mapping, and stock units.',
+      gradient: 'from-rose-500 to-pink-500',
+      icon: BiBarcode,
+    },
+  ]
 
   const fetchReportData = async () => {
     setLoading(true)
@@ -373,6 +459,67 @@ export default function ManagerReportPage() {
             )}
           </div>
 
+        </div>
+
+        {/* Data Export Hub */}
+        <div className="bg-white border border-slate-150 rounded-2xl p-6 md:p-8 shadow-sm flex flex-col gap-6">
+          <div>
+            <h2 className="text-base font-black text-slate-800 tracking-tight flex items-center gap-2">
+              <BiCloudDownload className="text-emerald-600 text-xl" /> Data Export Hub
+            </h2>
+            <p className="text-xs text-slate-500 mt-1">
+              Download complete datasets in high-fidelity Excel (.xlsx) formats for accounting, analytics, or archival purposes.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
+            {exportCards.map((card) => {
+              const isExporting = exporting[card.type];
+              return (
+                <div
+                  key={card.type}
+                  className="relative bg-slate-50/50 hover:bg-white border border-slate-150 hover:border-slate-200 rounded-2xl p-5 flex flex-col justify-between transition-all duration-300 group hover:-translate-y-1 hover:shadow-md"
+                >
+                  {/* Accent strip */}
+                  <div className={`absolute top-0 left-0 right-0 h-1 rounded-t-2xl bg-gradient-to-r ${card.gradient}`} />
+                  
+                  <div className="flex flex-col gap-3">
+                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${card.gradient} text-white flex items-center justify-center text-lg shadow-sm`}>
+                      <card.icon />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-850 group-hover:text-emerald-600 transition-colors duration-200">
+                        {card.title}
+                      </h4>
+                      <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">
+                        {card.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => handleExport(card.type)}
+                    disabled={isExporting}
+                    className={`w-full mt-5 py-2 px-3 rounded-xl text-[10px] font-bold tracking-wide transition-all flex items-center justify-center gap-1.5 shadow-sm border ${
+                      isExporting
+                        ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
+                        : 'bg-white hover:bg-slate-900 border-slate-200 hover:border-slate-900 text-slate-705 hover:text-white cursor-pointer active:scale-95'
+                    }`}
+                  >
+                    {isExporting ? (
+                      <>
+                        <BiLoaderAlt className="animate-spin text-sm" /> Exporting...
+                      </>
+                    ) : (
+                      <>
+                        <BiDownload className="text-sm" /> Download .xlsx
+                      </>
+                    )}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
       </div>

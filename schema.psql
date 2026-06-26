@@ -50,36 +50,50 @@ image_id TEXT NOT NULL,
 );
 
 CREATE TABLE products (
-  product_id SERIAL PRIMARY KEY,
-  category_id INT REFERENCES categories(category_id),
-  brand_id INT REFERENCES brands(brand_id),
-  name VARCHAR(150) NOT NULL,
-  slug VARCHAR(150),
-  description TEXT,
-  purchase_price NUMERIC(10,2),
-  sale_price NUMERIC(10,2),
-  discount_price NUMERIC(10,2) DEFAULT 0,
-  wholesale_price NUMERIC(10,2),
-  dealer_price NUMERIC(10,2) DEFAULT 0,
-  retail_price NUMERIC(10,2) DEFAULT 0,
-  image TEXT NOT NULL,
-  image_id VARCHAR(255) NOT NULL,
-  unit VARCHAR(50),
-  barcode TEXT,
-  stock INT DEFAULT 0,
-  is_active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
+    product_id SERIAL PRIMARY KEY,
 
+    category_id INT REFERENCES categories(category_id),
+    brand_id INT REFERENCES brands(brand_id),
+
+    name VARCHAR(150) NOT NULL,
+    slug VARCHAR(150) UNIQUE,
+    description TEXT,
+
+    is_active BOOLEAN DEFAULT TRUE,
+
+    created_at TIMESTAMP DEFAULT now(),
+    updated_at TIMESTAMP DEFAULT now()
+);
 
 CREATE TABLE product_variants (
-  variant_id   SERIAL PRIMARY KEY,
-  product_id   INT REFERENCES products(product_id) ON DELETE CASCADE,
-  variant_name VARCHAR(150) NOT NULL,  -- e.g. "Red - XL", "Blue - M"
-  price        NUMERIC(10,2) NOT NULL,
-  stock        INT DEFAULT 0
+    variant_id SERIAL PRIMARY KEY,
+    product_id INT NOT NULL
+        REFERENCES products(product_id)
+        ON DELETE CASCADE,
+    variant_name VARCHAR(150) DEFAULT 'Default',
+    barcode VARCHAR(100) UNIQUE,
+    purchase_price NUMERIC(10,2) NOT NULL,
+
+    sale_price NUMERIC(10,2) NOT NULL,
+    discount_price NUMERIC(10,2) DEFAULT 0,
+    wholesale_price NUMERIC(10,2),
+    dealer_price NUMERIC(10,2),
+    retail_price NUMERIC(10,2),
+
+    stock INT DEFAULT 0,
+
+    image TEXT,
+    image_id VARCHAR(255),
+
+    weight NUMERIC(10,2),
+    unit VARCHAR(30),
+
+    is_active BOOLEAN DEFAULT TRUE,
+
+    created_at TIMESTAMP DEFAULT now(),
+    updated_at TIMESTAMP DEFAULT now()
 );
+
 
 
 CREATE TABLE suppliers (
@@ -311,4 +325,4 @@ CREATE TABLE websites (
 
   created_at TIMESTAMP DEFAULT now(),
   updated_at TIMESTAMP DEFAULT now()
-);
+);

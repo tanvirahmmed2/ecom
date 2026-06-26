@@ -8,7 +8,7 @@ import { query } from './db';
 export async function generateUniqueBarcode() {
   const sql = `
     SELECT barcode 
-    FROM products 
+    FROM product_variants 
     WHERE barcode ~ '^[0-9]+$'
   `;
   const result = await query(sql);

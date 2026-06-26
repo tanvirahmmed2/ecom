@@ -16,7 +16,7 @@ export async function GET(req) {
                 'quantity', oi.quantity,
                 'price', oi.price,
                 'product_name', p.name,
-                'product_image', p.image,
+                'product_image', COALESCE(pv.image, (SELECT image FROM product_variants WHERE product_id = p.product_id ORDER BY variant_id ASC LIMIT 1)),
                 'variant_name', pv.variant_name
              )) FROM order_items oi
              JOIN products p ON oi.product_id = p.product_id
@@ -134,7 +134,7 @@ export async function POST(req) {
       if (item.variant_id) {
         // Variant item details lookup
         const varRes = await client.query(
-          `SELECT v.price, v.stock, p.name, p.product_id, p.sale_price, p.discount_price
+          `SELECT v.sale_price, v.discount_price, v.stock, p.name, p.product_id
            FROM product_variants v
            JOIN products p ON v.product_id = p.product_id
            WHERE v.variant_id = $1`,
@@ -148,9 +148,8 @@ export async function POST(req) {
           throw new Error(`Insufficient stock for variant "${dbVar.name}"`);
         }
         const salePrice = parseFloat(dbVar.sale_price);
-        const variantPrice = parseFloat(dbVar.price);
         const discountAmt = parseFloat(dbVar.discount_price || 0);
-        const finalPrice = Math.max(0, (salePrice + variantPrice) - discountAmt);
+        const finalPrice = Math.max(0, salePrice - discountAmt);
 
         subtotal += finalPrice * item.quantity;
         totalDiscount += discountAmt * item.quantity;
@@ -162,11 +161,13 @@ export async function POST(req) {
           price: finalPrice
         });
       } else {
-        // Simple item details lookup
+        // Simple item details lookup - resolve from default variant
         const prodRes = await client.query(
-          `SELECT sale_price, discount_price, stock, name
-           FROM products
-           WHERE product_id = $1`,
+          `SELECT v.sale_price, v.discount_price, v.stock, p.name
+           FROM product_variants v
+           JOIN products p ON v.product_id = p.product_id
+           WHERE p.product_id = $1
+           ORDER BY v.variant_id ASC LIMIT 1`,
           [item.product_id]
         );
         if (prodRes.rows.length === 0) {
@@ -245,15 +246,25 @@ export async function POST(req) {
             throw new Error(`Insufficient stock for variant "${updateRes.rows[0].variant_name}"`);
           }
         } else {
-          const updateRes = await client.query(
-            `UPDATE products 
-             SET stock = stock - $1 
-             WHERE product_id = $2
-             RETURNING stock, name`,
-            [vItem.quantity, vItem.product_id]
+          // Find default variant
+          const defaultVarRes = await client.query(
+            `SELECT variant_id FROM product_variants WHERE product_id = $1 ORDER BY variant_id ASC LIMIT 1`,
+            [vItem.product_id]
           );
-          if (updateRes.rows.length > 0 && updateRes.rows[0].stock < 0) {
-            throw new Error(`Insufficient stock for product "${updateRes.rows[0].name}"`);
+          if (defaultVarRes.rows.length > 0) {
+            const targetVarId = defaultVarRes.rows[0].variant_id;
+            const updateRes = await client.query(
+              `UPDATE product_variants 
+               SET stock = stock - $1 
+               WHERE variant_id = $2
+               RETURNING stock, variant_name AS name`,
+              [vItem.quantity, targetVarId]
+            );
+            if (updateRes.rows.length > 0 && updateRes.rows[0].stock < 0) {
+              throw new Error(`Insufficient stock for product variant`);
+            }
+          } else {
+            throw new Error(`Default variant not found for product ID ${vItem.product_id}`);
           }
         }
       }

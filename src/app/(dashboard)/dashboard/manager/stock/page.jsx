@@ -79,8 +79,7 @@ export default function ManagerStockInventoryPage() {
     const matchesCategory = selectedCategory === 'all' || prod.category_id?.toString() === selectedCategory
     const matchesSearch = 
       prod.name.toLowerCase().includes(search.toLowerCase()) ||
-      (prod.barcode && prod.barcode.includes(search)) ||
-      (prod.sku && prod.sku.toLowerCase().includes(search.toLowerCase()))
+      (prod.barcode && prod.barcode.includes(search))
     return matchesCategory && matchesSearch
   })
 
@@ -146,7 +145,7 @@ export default function ManagerStockInventoryPage() {
             <BiSearch className="text-slate-400 text-lg" />
             <input
               type="text"
-              placeholder="Search by name, SKU, or barcode..."
+              placeholder="Search by name or barcode..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="bg-transparent border-none outline-none text-slate-850 text-xs w-full placeholder:text-slate-450"
@@ -180,7 +179,7 @@ export default function ManagerStockInventoryPage() {
               <thead className="bg-slate-50 text-slate-655 font-bold border-b border-slate-200">
                 <tr>
                   <th className="px-4 py-3">Product Name</th>
-                  <th className="px-4 py-3">Barcode / SKU</th>
+                  <th className="px-4 py-3">Barcode</th>
                   <th className="px-4 py-3">Brand</th>
                   <th className="px-4 py-3">Category</th>
                   <th className="px-4 py-3 text-right">Purchase P.</th>
@@ -200,7 +199,6 @@ export default function ManagerStockInventoryPage() {
                       </td>
                       <td className="px-4 py-3.5 font-mono text-slate-500 text-xxs">
                         <div>{prod.barcode || 'N/A'}</div>
-                        <div className="text-[10px] text-slate-400">{prod.sku || ''}</div>
                       </td>
                       <td className="px-4 py-3.5 text-slate-600 font-semibold">{prod.brand_name || 'Generic'}</td>
                       <td className="px-4 py-3.5 text-slate-600 font-semibold">{prod.category_name || 'Uncategorized'}</td>

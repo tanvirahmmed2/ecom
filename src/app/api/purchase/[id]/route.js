@@ -87,19 +87,23 @@ export async function DELETE(req, { params }) {
 
     // Reverse stocks
     for (const item of itemsRes.rows) {
-      if (item.variant_id) {
+      let targetVarId = item.variant_id;
+      if (!targetVarId) {
+        const defaultVarRes = await query(
+          `SELECT variant_id FROM product_variants WHERE product_id = $1 ORDER BY variant_id ASC LIMIT 1`,
+          [item.product_id]
+        );
+        if (defaultVarRes.rows.length > 0) {
+          targetVarId = defaultVarRes.rows[0].variant_id;
+        }
+      }
+
+      if (targetVarId) {
         await query(
           `UPDATE product_variants 
            SET stock = GREATEST(stock - $1, 0) 
            WHERE variant_id = $2`,
-          [item.quantity, item.variant_id]
-        );
-      } else {
-        await query(
-          `UPDATE products 
-           SET stock = GREATEST(stock - $1, 0) 
-           WHERE product_id = $2`,
-          [item.quantity, item.product_id]
+          [item.quantity, targetVarId]
         );
       }
     }

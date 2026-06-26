@@ -174,8 +174,10 @@ export default function ProductCard({ product }) {
 
           <div className="flex-1 w-full overflow-y-auto my-3 flex flex-col gap-2 pr-1">
             {variants.map((v) => {
-              const vPrice = parseFloat(sale_price) + parseFloat(v.price)
-              const finalVPrice = hasDiscount ? Math.max(0, vPrice - parseFloat(discount_price || 0)) : vPrice
+              const vHasDiscount = v.discount_price && parseFloat(v.discount_price) > 0
+              const finalVPrice = vHasDiscount
+                ? Math.max(0, parseFloat(v.sale_price) - parseFloat(v.discount_price))
+                : parseFloat(v.sale_price)
               const inStock = parseInt(v.stock, 10) > 0
 
               return (

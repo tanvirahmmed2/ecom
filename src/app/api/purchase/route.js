@@ -105,20 +105,24 @@ export async function POST(req) {
         [purchaseId, prodId, varId, q, price]
       );
 
-      // Increment variant stock if variant is set, otherwise increment main product stock
-      if (varId) {
+      // Increment variant stock
+      let targetVarId = varId;
+      if (!targetVarId) {
+        const defaultVarRes = await query(
+          `SELECT variant_id FROM product_variants WHERE product_id = $1 ORDER BY variant_id ASC LIMIT 1`,
+          [prodId]
+        );
+        if (defaultVarRes.rows.length > 0) {
+          targetVarId = defaultVarRes.rows[0].variant_id;
+        }
+      }
+
+      if (targetVarId) {
         await query(
           `UPDATE product_variants 
            SET stock = stock + $1 
            WHERE variant_id = $2`,
-          [q, varId]
-        );
-      } else {
-        await query(
-          `UPDATE products 
-           SET stock = COALESCE(stock, 0) + $1 
-           WHERE product_id = $2`,
-          [q, prodId]
+          [q, targetVarId]
         );
       }
 
