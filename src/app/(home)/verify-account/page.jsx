@@ -58,18 +58,18 @@ const VerifyForm = () => {
     }
 
     return (
-        <div className='w-full max-w-md flex flex-col gap-4 shadow-md border border-black/10 p-8 rounded-2xl bg-white'>
-            <h2 className='text-2xl font-bold text-slate-800 text-center'>Verify Account</h2>
+        <div className='w-full max-w-md flex flex-col gap-4 shadow-xl shadow-slate-100/40 border border-slate-100 p-8 md:p-10 rounded-3xl bg-white relative z-10 animate-fade-in'>
+            <h2 className='text-2xl font-black text-slate-800 text-center tracking-tight'>Verify Account</h2>
             
             {status === 'success' && (
-                <div className='p-4 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl text-center text-sm font-medium'>
+                <div className='p-4 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl text-center text-sm font-medium animate-fade-in'>
                     {message}
                     <div className='mt-2 text-xs text-emerald-600'>Redirecting to login page in 3 seconds...</div>
                 </div>
             )}
 
             {status === 'error' && (
-                <div className='p-4 bg-rose-50 text-rose-800 border border-rose-200 rounded-xl text-center text-sm font-medium'>
+                <div className='p-4 bg-rose-50 text-rose-800 border border-rose-200 rounded-xl text-center text-sm font-medium animate-fade-in'>
                     {message}
                 </div>
             )}
@@ -77,13 +77,13 @@ const VerifyForm = () => {
             {tokenFromUrl ? (
                 <div className='text-center py-4'>
                     {verifying ? (
-                        <p className='text-slate-600 animate-pulse font-medium'>Verifying token from URL, please wait...</p>
+                        <p className='text-xs text-slate-500 animate-pulse font-bold uppercase tracking-wider'>Verifying token from URL, please wait...</p>
                     ) : status === 'success' ? (
-                        <Link href='/login' className='text-red-600 hover:underline font-semibold'>Go to Login page</Link>
+                        <Link href='/login' className='text-emerald-600 hover:text-emerald-500 hover:underline font-bold text-sm transition'>Go to Login page</Link>
                     ) : (
                         <button 
                             onClick={() => verifyAccount(token)} 
-                            className='primary-button bg-slate-900 text-white font-medium px-6 py-2 rounded-xl'
+                            className='w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm py-3.5 rounded-xl cursor-pointer transition shadow-lg shadow-emerald-600/15 hover:scale-[1.01] active:scale-[0.99]'
                         >
                             Retry Verification
                         </button>
@@ -91,31 +91,32 @@ const VerifyForm = () => {
                 </div>
             ) : (
                 <form onSubmit={handleSubmit} className='flex flex-col gap-4'>
-                    <p className='text-sm text-slate-500 text-center'>
+                    <p className='text-xs text-slate-550 text-center leading-relaxed font-semibold'>
                         If you didn't click the link in your email directly, paste the verification token below:
                     </p>
-                    <div className='w-full flex flex-col gap-2'>
+                    <div className='w-full flex flex-col gap-1.5'>
+                        <label htmlFor="token" className='text-[10px] font-bold uppercase tracking-wider text-slate-400'>Verification Token</label>
                         <input 
                             type="text" 
                             required 
                             onChange={(e) => setToken(e.target.value)} 
                             value={token} 
-                            placeholder='Paste verification token here'
-                            className='w-full p-2 border border-slate-300 rounded-lg outline-none focus:border-slate-800 text-center font-mono' 
+                            id="token"
+                            className='w-full px-4 py-3 bg-slate-50 border border-slate-200/80 rounded-xl outline-none focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 text-slate-800 text-sm font-medium text-center font-mono transition duration-200' 
                         />
                     </div>
                     <button 
                         type='submit' 
                         disabled={verifying || !token.trim()}
-                        className={`primary-button w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-2 rounded-xl cursor-pointer transition ${verifying || !token.trim() ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`w-full mt-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm py-3.5 rounded-xl cursor-pointer transition shadow-lg shadow-emerald-600/15 hover:scale-[1.01] active:scale-[0.99] ${verifying || !token.trim() ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                         {verifying ? 'Verifying...' : 'Verify'}
                     </button>
                 </form>
             )}
 
-            <div className='text-center text-sm mt-2'>
-                <Link href={'/login'} className='text-slate-500 hover:underline'>Back to Login</Link>
+            <div className='text-center text-xs mt-3 font-bold'>
+                <Link href={'/login'} className='text-slate-455 hover:text-slate-600 hover:underline transition'>Back to Login</Link>
             </div>
         </div>
     )
@@ -123,7 +124,11 @@ const VerifyForm = () => {
 
 const VerifyPage = () => {
   return (
-    <div className='w-full min-h-screen flex items-center justify-center bg-slate-50 p-4'>
+    <div className='w-full min-h-screen flex items-center justify-center bg-slate-50 p-4 relative overflow-hidden'>
+      {/* Ambient Background Glows */}
+      <div className="absolute top-[-10%] left-[-10%] w-[45%] h-[45%] rounded-full blur-[120px] opacity-10 pointer-events-none bg-emerald-500" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[45%] h-[45%] rounded-full blur-[120px] opacity-10 pointer-events-none bg-emerald-500" />
+
       <Suspense fallback={<div className="text-slate-600 font-medium">Loading search parameters...</div>}>
         <VerifyForm />
       </Suspense>
