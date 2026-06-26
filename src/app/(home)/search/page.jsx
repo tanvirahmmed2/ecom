@@ -66,7 +66,7 @@ function SearchResultsContent() {
                     <p className="text-slate-400 font-medium">Searching catalog...</p>
                 </div>
             ) : products.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
                     {products.map(product => (
                         <ProductCard key={product.product_id} product={product} />
                     ))}

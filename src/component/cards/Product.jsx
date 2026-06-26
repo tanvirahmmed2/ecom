@@ -94,7 +94,7 @@ export default function ProductCard({ product }) {
       </div>
 
       {/* Info Content Section */}
-      <div className="p-4 flex flex-col flex-1 gap-1.5">
+      <div className="p-3 sm:p-4 flex flex-col flex-1 gap-1.5">
         <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
           <span>{category_name || 'General'}</span>
           {brand_name && (
@@ -112,31 +112,32 @@ export default function ProductCard({ product }) {
         </Link>
 
         {/* Pricing & Add to Cart button */}
-        <div className="mt-auto pt-2.5 flex items-center justify-between gap-2 border-t border-slate-50">
+        <div className="mt-auto pt-2.5 flex items-center justify-between gap-1.5 sm:gap-2 border-t border-slate-50">
           <div className="flex flex-col">
             {hasDiscount ? (
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-base font-bold text-slate-900">৳{finalPrice.toFixed(2)}</span>
-                <span className="text-xs text-slate-400 line-through">৳{parseFloat(sale_price).toFixed(2)}</span>
+              <div className="flex flex-col sm:flex-row sm:items-baseline gap-0.5 sm:gap-1.5">
+                <span className="text-sm sm:text-base font-bold text-slate-900">৳{finalPrice.toFixed(2)}</span>
+                <span className="text-[10px] sm:text-xs text-slate-400 line-through">৳{parseFloat(sale_price).toFixed(2)}</span>
               </div>
             ) : (
-              <span className="text-base font-bold text-slate-900">৳{finalPrice.toFixed(2)}</span>
+              <span className="text-sm sm:text-base font-bold text-slate-900">৳{finalPrice.toFixed(2)}</span>
             )}
           </div>
 
           {((total_stock !== undefined ? parseInt(total_stock, 10) : parseInt(stock, 10)) <= 0) ? (
             <button
               disabled
-              className="p-2 bg-slate-100 text-slate-400 rounded-xl cursor-not-allowed border border-slate-150 flex items-center justify-center gap-1.5"
+              className="p-2 bg-slate-100 text-slate-400 rounded-xl cursor-not-allowed border border-slate-150 flex items-center justify-center gap-1"
               title="Out of Stock"
             >
-              <span className="text-[10px] font-bold px-0.5">Out of Stock</span>
+              <span className="hidden sm:inline text-[10px] font-bold px-0.5">Out of Stock</span>
+              <span className="inline sm:hidden text-[9px] font-bold px-0.5">Stock Out</span>
             </button>
           ) : (
             <button
               onClick={handleAddToCart}
               disabled={loadingVariants}
-              className="p-2 bg-slate-900/5 text-slate-650 hover:bg-emerald-600 hover:text-white rounded-xl transition-all duration-200 shadow-sm border border-slate-100 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="p-2 bg-slate-900/5 text-slate-650 hover:bg-emerald-600 hover:text-white rounded-xl transition-all duration-200 shadow-sm border border-slate-100 flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer disabled:opacity-50"
               title="Add to Cart"
             >
               {loadingVariants ? (
@@ -144,7 +145,7 @@ export default function ProductCard({ product }) {
               ) : (
                 <BiCart className="text-lg" />
               )}
-              <span className="text-xs font-bold px-0.5">
+              <span className="hidden sm:inline text-xs font-bold px-0.5">
                 {loadingVariants ? 'Loading...' : 'Add'}
               </span>
             </button>
