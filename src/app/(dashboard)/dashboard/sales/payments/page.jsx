@@ -157,7 +157,7 @@ export default function SalesPaymentsPage() {
                 {filteredPayments.map(pay => (
                   <tr key={pay.payment_id} className="hover:bg-slate-50/50 transition">
                     <td className="px-4 py-3.5 text-center font-bold text-slate-500">#PAY-{pay.payment_id}</td>
-                    <td className="px-4 py-3.5 whitespace-nowrap text-slate-500">{new Date(pay.created_at).toLocaleString()}</td>
+                    <td className="px-4 py-3.5 whitespace-nowrap text-slate-500">{new Date(pay.paid_at).toLocaleString()}</td>
                     <td className="px-4 py-3.5 text-center font-bold text-slate-850">
                       <Link href={`/dashboard/sales/sale/${pay.order_id}`} className="hover:underline text-slate-900 cursor-pointer">
                         #ORD-{pay.order_id}

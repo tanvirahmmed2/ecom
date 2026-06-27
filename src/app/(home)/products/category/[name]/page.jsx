@@ -145,7 +145,7 @@ export default function ProductsCategorySlugPage() {
         style={{ backgroundColor: themeColor }}
       />
 
-      <div className="max-w-6xl mx-auto flex flex-col gap-8 relative z-10">
+      <div className="w-full mx-auto flex flex-col gap-8 relative z-10">
         
         {/* Breadcrumb Trail */}
         <div className="flex items-center flex-wrap gap-1.5 text-xs font-semibold text-slate-400">
@@ -310,7 +310,7 @@ export default function ProductsCategorySlugPage() {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
                   {paginatedProducts.map((p) => (
                     <ProductCard key={p.product_id} product={p} />
                   ))}

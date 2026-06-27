@@ -57,7 +57,7 @@ const Brands = () => {
         }
       `}} />
 
-      <div className="max-w-6xl mx-auto px-4 md:px-8 mb-6">
+      <div className="w-full px-4 md:px-8 mb-6">
         <span className="text-xs font-black uppercase tracking-widest text-emerald-600" style={{ color: themeColor }}>
           Partners
         </span>

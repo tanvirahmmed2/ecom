@@ -129,10 +129,9 @@ export default function POSPageClean() {
     const existingIndex = cart.findIndex(item => item.cartKey === key)
     const maxStock = variant ? parseInt(variant.stock, 10) : parseInt(product.stock, 10)
 
-    const basePrice = parseFloat(product.sale_price)
-    const variantPrice = variant ? parseFloat(variant.price) : 0
-    const discountAmt = parseFloat(product.discount_price || 0)
-    const finalPrice = Math.max(0, (basePrice + variantPrice) - discountAmt)
+    const itemSalePrice = variant ? parseFloat(variant.sale_price) : parseFloat(product.sale_price)
+    const itemDiscount = variant ? parseFloat(variant.discount_price || 0) : parseFloat(product.discount_price || 0)
+    const finalPrice = Math.max(0, itemSalePrice - itemDiscount)
 
     if (existingIndex > -1) {
       const currentQty = cart[existingIndex].quantity
@@ -687,8 +686,8 @@ export default function POSPageClean() {
 
             <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
               {productVariants.filter(v => v.is_active !== false).map((v) => {
-                const vPrice = parseFloat(selectedProduct.sale_price) + parseFloat(v.price || v.sale_price || 0)
-                const discountAmt = parseFloat(selectedProduct.discount_price || 0)
+                const vPrice = parseFloat(v.sale_price)
+                const discountAmt = parseFloat(v.discount_price || 0)
                 const finalVPrice = Math.max(0, vPrice - discountAmt)
                 const inStock = parseInt(v.stock, 10) > 0
 

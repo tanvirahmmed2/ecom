@@ -13,7 +13,7 @@ const StoreLocation = () => {
 
   return (
     <div className="w-full py-16 px-4 md:px-8 bg-white border-b border-slate-100 animate-fade-in">
-      <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-10 items-stretch">
+      <div className="w-full flex flex-col lg:flex-row gap-10 items-stretch">
 
         {/* Info Card */}
         <div className="flex-1 flex flex-col gap-6 justify-center">

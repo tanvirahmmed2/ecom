@@ -44,7 +44,7 @@ const TopSales = () => {
 
   return (
     <div className="w-full py-16 px-4 md:px-8 bg-white border-b border-slate-100">
-      <div className="max-w-6xl mx-auto flex flex-col gap-8">
+      <div className="w-full flex flex-col gap-8">
         
         {/* Header */}
         <div className="flex justify-between items-end">

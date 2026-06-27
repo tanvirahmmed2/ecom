@@ -1,184 +1,225 @@
 'use client'
 import React, { useContext, useState, useEffect } from 'react'
-import Link from 'next/link'
 import axios from 'axios'
-import { Context } from '../helper/Context'
-import { BiShoppingBag, BiPurchaseTagAlt, BiTrendingUp } from 'react-icons/bi'
+import Link from 'next/link'
 import Image from 'next/image'
-
+import { Context } from '../helper/Context'
+import { BiCart, BiSolidChevronRight } from 'react-icons/bi'
+import { FiArrowRight, FiTrendingUp } from 'react-icons/fi'
 
 const Hero = () => {
-  const { website } = useContext(Context)
-  const themeColor = website?.theme_color || '#10b981'
-  const tagline = website?.tagline || 'Your premium shopping experience'
-  const heroTitle = website?.hero_title || 'Discover Premium Quality Products'
-  const heroSubtitle = website?.hero_subtitle || 'Shop our exclusive range of handpicked quality products at unbeatable prices.'
-
+  const { website, addToCart } = useContext(Context)
   const [products, setProducts] = useState([])
-  const [currentSlide, setCurrentSlide] = useState(0)
+  const [loading, setLoading] = useState(true)
 
-  // Fetch active products, filter for on-sale items, shuffle and select top products
+  const themeColor = website?.theme_color || '#10b981'
+  const shopName = website?.name || 'EcoStore'
+  const tagline = website?.tagline || 'Premium Quality Collections'
+
   useEffect(() => {
-    const fetchTopSalesProducts = async () => {
+    const fetchHeroData = async () => {
       try {
-        const res = await axios.get('/api/product')
-        const allProducts = res.data.filter(p => p.is_active !== false && p.image)
-
-        // Filter for products on sale (having positive discount price)
-        let saleProducts = allProducts.filter(p => p.discount_price && parseFloat(p.discount_price) > 0)
-
-        // Fallback to all active products if no specific sale items
-        if (saleProducts.length === 0) {
-          saleProducts = allProducts
-        }
-
-        // Shuffle randomly
-        const shuffled = saleProducts.sort(() => 0.5 - Math.random())
-        const selected = shuffled.slice(0, 6)
-
-        if (selected.length > 0) {
-          setProducts(selected)
-        }
+        const res = await axios.get('/api/hero')
+        setProducts(res.data.products || [])
       } catch (err) {
-        console.error("Failed to load hero products", err)
+        console.error("Failed to load hero products:", err)
+      } finally {
+        setLoading(false)
       }
     }
-    fetchTopSalesProducts()
+    fetchHeroData()
   }, [])
 
-  // Auto slide timer
-  useEffect(() => {
-    if (products.length <= 1) return
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % products.length)
-    }, 6000)
-    return () => clearInterval(timer)
-  }, [products])
+  const getProductPriceInfo = (product) => {
+    if (!product) return { hasDiscount: false, salePrice: 0, finalPrice: 0, discountPrice: 0, discountPercent: 0 }
+    const salePrice = parseFloat(product.sale_price || 0)
+    const discountPrice = parseFloat(product.discount_price || 0)
+    const hasDiscount = discountPrice > 0
+    const finalPrice = hasDiscount ? Math.max(0, salePrice - discountPrice) : salePrice
+    const discountPercent = salePrice > 0 ? Math.round((discountPrice / salePrice) * 100) : 0
+    return { hasDiscount, salePrice, finalPrice, discountPrice, discountPercent }
+  }
 
-  const activeProduct = products[currentSlide]
+
+  // Ensure we have at least 1 product to draw the structural layout
+  if (!products || products.length === 0) {
+    return null
+  }
+
+  const p1 = products[0]
+  const p2 = products[1] || products[0]
+  const p3 = products[2] || products[0]
+
+  const p1Price = getProductPriceInfo(p1)
+  const p2Price = getProductPriceInfo(p2)
+  const p3Price = getProductPriceInfo(p3)
 
   return (
-    <div className="relative w-full min-h-[85vh] flex items-center overflow-hidden bg-white px-6 py-20 md:py-28">
+    <div className="w-full bg-slate-50/50 py-12 px-4 md:px-8 border-b border-slate-100">
+      <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-      {/* Background Grid Pattern */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#0f172a05_1px,transparent_1px),linear-gradient(to_bottom,#0f172a05_1px,transparent_1px)] bg-[size:3rem_3rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none z-0" />
-
-      {/* Ambient background blur glows */}
-      <div
-        className="absolute top-1/4 left-[-10%] w-[400px] h-[400px] rounded-full blur-[130px] opacity-[0.06] pointer-events-none z-0"
-        style={{ backgroundColor: themeColor }}
-      />
-      <div
-        className="absolute bottom-1/4 right-[-10%] w-[500px] h-[500px] rounded-full blur-[140px] opacity-[0.04] pointer-events-none z-0"
-        style={{ backgroundColor: themeColor }}
-      />
-
-      <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 md:gap-16 items-center relative z-10">
-
-        {/* Left Column: Core Text Contents */}
-        <div className={`${products.length > 0 ? 'lg:col-span-7' : 'lg:col-span-12'} flex flex-col items-start text-left gap-6 animate-fade-in order-2 lg:order-1`}>
-
-          {/* Tagline Badge */}
-          <span
-            className="px-4 py-1.5 text-[10px] md:text-xs font-black uppercase tracking-wider rounded-full border bg-slate-50 border-slate-200/60 shadow-sm select-none flex items-center gap-2"
-            style={{ borderColor: `${themeColor}25`, color: themeColor }}
-          >
-            <BiTrendingUp className="text-sm" />
-            <span>{tagline}</span>
-          </span>
-
-          {/* Title */}
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-slate-900 tracking-tight leading-[1.1] max-w-2xl">
-            {heroTitle.split(' ').map((word, i) => {
-              // Highlight selected keywords
-              if (i === 1 || i === 2) {
-                return (
-                  <span
-                    key={i}
-                    className="bg-clip-text text-transparent bg-gradient-to-r"
-                    style={{ backgroundImage: `linear-gradient(to right, ${themeColor}, #0f172a)` }}
-                  >
-                    {word}{' '}
+        <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden hover:shadow-xl hover:border-slate-200/80 transition-all duration-300 group">
+          <div className="flex flex-col md:flex-row h-full">
+            <div className="w-full md:w-1/2 p-6 md:p-8 flex flex-col justify-between gap-6 relative z-10">
+              <div className="space-y-4">
+                <span
+                  className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider px-3.5 py-1 rounded-full shadow-sm"
+                  style={{ color: themeColor, backgroundColor: `${themeColor}10` }}
+                >
+                  <FiTrendingUp className="text-xs" /> Featured Deal
+                </span>
+                <div>
+                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 block mb-1">
+                    {p1.category_name || 'Collection'}
                   </span>
-                )
-              }
-              return word + ' ';
-            })}
-          </h1>
+                  <Link href={`/products/${p1.slug}`}>
+                    <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight leading-tight hover:text-slate-700 transition duration-300 line-clamp-2">
+                      {p1.name}
+                    </h2>
+                  </Link>
+                </div>
+                <p
+                  className="text-sm text-slate-555 leading-relaxed line-clamp-3 font-normal"
+                  dangerouslySetInnerHTML={{ __html: p1.description || 'Elevate your routine with our featured selection, combining top-tier craft, style, and popular acclaim.' }}
+                />
+              </div>
 
-          {/* Subtitle */}
-          <p className="text-slate-600 text-sm md:text-base max-w-xl leading-relaxed font-medium">
-            {heroSubtitle}
-          </p>
+              <div className="space-y-4">
+                {/* Price display */}
+                <div className="flex flex-col gap-1">
+                  {p1Price.hasDiscount ? (
+                    <div className="space-y-1.5">
+                      <div className="flex items-baseline gap-2.5">
+                        <span className="text-3xl font-extrabold text-slate-900">৳{p1Price.finalPrice.toFixed(2)}</span>
+                        <span className="text-sm font-semibold text-slate-400 line-through">৳{p1Price.salePrice.toFixed(2)}</span>
+                      </div>
+                      <span
+                        className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider border"
+                        style={{ color: '#e11d48', backgroundColor: '#fff1f2', borderColor: '#ffe4e6' }}
+                      >
+                        Save {p1Price.discountPercent}%
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-3xl font-extrabold text-slate-900">৳{p1Price.finalPrice.toFixed(2)}</span>
+                  )}
+                </div>
 
-          {/* CTAs */}
-          <div className="flex flex-col sm:flex-row gap-4 mt-2 w-full sm:w-auto">
-            <Link
-              href="/products"
-              className="px-8 py-4 text-white font-bold text-sm rounded-2xl shadow-lg hover:scale-[1.03] active:scale-[0.97] transition-all flex items-center justify-center gap-2 cursor-pointer"
-              style={{ backgroundColor: themeColor, boxShadow: `0 10px 30px -5px ${themeColor}40` }}
-            >
-              <BiShoppingBag className="text-lg" /> Explore Catalog
-            </Link>
-            <Link
-              href="/offers"
-              className="px-8 py-4 bg-white hover:bg-slate-50 text-slate-800 font-bold text-sm rounded-2xl border border-slate-200 shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.03] active:scale-[0.97]"
-            >
-              <BiPurchaseTagAlt className="text-lg" /> View Offers
-            </Link>
+                {/* Actions */}
+                <div className="flex items-center gap-4">
+                  <Link
+                    href={`/products/${p1.slug}`}
+                    className="flex-1 text-center py-3 px-6 text-sm font-bold text-white rounded-2xl shadow-sm hover:shadow-lg transition duration-300 hover:brightness-105 cursor-pointer flex items-center justify-center gap-2 group/btn"
+                    style={{ backgroundColor: themeColor }}
+                  >
+                    Shop Now
+                    <FiArrowRight className="text-base transition-transform group-hover/btn:translate-x-1" />
+                  </Link>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault()
+                      addToCart(p1)
+                    }}
+                    disabled={parseInt(p1.stock || p1.total_stock || 0) <= 0}
+                    className="p-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl transition duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+                    title="Add to Cart"
+                  >
+                    <BiCart className="text-xl" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="w-full md:w-1/2 aspect-square md:aspect-auto relative bg-slate-50/50 overflow-hidden min-h-[260px] md:min-h-full border-t md:border-t-0 md:border-l border-slate-100/80 flex items-center justify-center">
+              <Link href={`/products/${p1.slug}`} className="absolute inset-0 block">
+                <Image
+                  src={p1.image || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&auto=format&fit=crop&q=60'}
+                  alt={p1.name}
+                  width={600}
+                  height={600}
+                  priority
+                  className="w-full h-full object-contain group-hover:scale-[1.03] transition-transform duration-700"
+                />
+              </Link>
+            </div>
           </div>
-
         </div>
 
-        {/* Right Column: Sliding Portrait Frame */}
-        {products.length > 0 && (
-          <div className="lg:col-span-5 flex justify-center relative order-1 lg:order-2">
+        <div className="w-full grid grid-cols-1 gap-6">
 
-            {/* Glow backdrop specifically for the slider frame */}
+          {/* here show the second of top sold product image and show data */}
+          <div className="w-full bg-white rounded-3xl p-5 flex items-center justify-between border border-slate-100 shadow-sm hover:shadow-xl hover:border-slate-200/80 transition-all duration-300 group">
+            <div className="flex-1 flex flex-col justify-between pr-4 h-full gap-2">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  {p2.category_name || 'General'}
+                </span>
+                <Link href={`/products/${p2.slug}`}>
+                  <h3 className="text-base font-bold text-slate-900 line-clamp-1 hover:text-slate-700 transition duration-200 mt-1">
+                    {p2.name}
+                  </h3>
+                </Link>
+              </div>
+
+              <div className="flex flex-col gap-2 mt-2">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-lg font-extrabold text-slate-900">৳{p2Price.finalPrice.toFixed(2)}</span>
+                  {p2Price.hasDiscount && (
+                    <span className="text-xs text-slate-400 line-through">৳{p2Price.salePrice.toFixed(2)}</span>
+                  )}
+                </div>
+                <Link
+                  href={`/products/${p2.slug}`}
+                  className="text-xs font-bold text-slate-500 hover:text-slate-800 flex items-center gap-1 transition-all w-fit"
+                >
+                  View Details <BiSolidChevronRight className="text-sm group-hover:translate-x-0.5 transition-transform" />
+                </Link>
+              </div>
+            </div>
+
+            <div className="w-24 h-24 md:w-28 md:h-28 relative flex-shrink-0 rounded-2xl overflow-hidden bg-slate-50 border border-slate-100/80">
+              <Link href={`/products/${p2.slug}`}>
+                <Image
+                  src={p2.image || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&auto=format&fit=crop&q=60'}
+                  alt={p2.name}
+                  width={200}
+                  height={200}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+              </Link>
+            </div>
+          </div>
+
+          {/* here show shop name */}
+          <div className="w-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white rounded-3xl p-6 flex flex-col justify-center items-center text-center shadow-md relative overflow-hidden min-h-[140px] group border border-slate-800">
+            {/* Background Glow */}
             <div
-              className="absolute -inset-4 rounded-[2.5rem] blur-[80px] opacity-[0.12] pointer-events-none z-0 transition-colors duration-1000"
+              className="absolute -right-6 -bottom-6 w-24 h-24 rounded-full blur-2xl opacity-25 group-hover:scale-125 transition-transform duration-500"
+              style={{ backgroundColor: themeColor }}
+            />
+            <div
+              className="absolute -left-6 -top-6 w-24 h-24 rounded-full blur-2xl opacity-15 group-hover:scale-125 transition-transform duration-500"
               style={{ backgroundColor: themeColor }}
             />
 
-            <div className="relative w-full  aspect-4/5 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 shadow-[0_20px_40px_rgba(15,23,42,0.06)] z-10 group">
-              {/* Slide Images */}
-              {products.map((item, idx) => (
-                <Image width={1000} height={1000}
-                  key={idx}
-                  src={item.image}
-                  alt={item.name}
-                  className={`absolute inset-0 w-full h-full object-cover transition-all duration-1200 ease-in-out select-none pointer-events-none ${idx === currentSlide ? 'opacity-90 scale-100' : 'opacity-0 scale-105'
-                    }`}
-                />
-              ))}
-
-              <div className="absolute inset-0 bg-linear-to-t from-white/40 via-transparent to-transparent z-10" />
-
-              {activeProduct && (
-                <Link
-                  href={`/products/${activeProduct.slug}`}
-                  className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-md border border-slate-200/80 p-3 rounded-2xl flex items-center justify-between z-20 hover:border-slate-300/80 shadow-sm transition duration-300"
-                >
-                  <div className="min-w-0 pr-2">
-                    <span className="text-[9px] uppercase tracking-wider font-extrabold" style={{ color: themeColor }}>Featured</span>
-                    <h4 className="text-xs font-bold text-slate-800 truncate">{activeProduct.name}</h4>
-                  </div>
-                  <span className="text-[11px] font-black text-white px-2.5 py-1.5 rounded-xl shrink-0 flex items-center justify-center" style={{ backgroundColor: themeColor }}>
-                    ৳{parseFloat(activeProduct.sale_price).toFixed(2)}
-                  </span>
-                </Link>
-              )}
-            </div>
-
-            {/* Background decorative shape */}
-            <div className="absolute -bottom-8 -left-8 w-24 h-24 border-l-2 border-b-2 border-slate-200 rounded-bl-[1.5rem] pointer-events-none z-0" />
-            <div className="absolute -top-8 -right-8 w-24 h-24 border-r-2 border-t-2 border-slate-200 rounded-tr-[1.5rem] pointer-events-none z-0" />
-
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white select-none">
+              {shopName}
+            </h1>
+            <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider mt-1.5 max-w-[90%] line-clamp-1">
+              {tagline}
+            </p>
+            <Link
+              href="/products"
+              className="mt-4 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider px-5 py-2 bg-white text-slate-900 hover:bg-slate-50 hover:shadow-md active:scale-95 rounded-full transition-all duration-300"
+            >
+              Explore Shop <FiArrowRight className="text-sm" />
+            </Link>
           </div>
-        )}
+
+
+        </div>
 
       </div>
-
     </div>
   )
 }
